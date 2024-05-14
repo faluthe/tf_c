@@ -1,6 +1,10 @@
 #!/bin/bash
 
-gcc -shared -fPIC tf_c.c -o tf_c.so -Wall
+DEBUG=true
+
+if [ "$DEBUG" = true ]; then
+    gcc -shared -fPIC tf_c.c -o tf_c.so -Wall
+fi
 
 LIB_PATH=$(pwd)/tf_c.so
 PROCID=$(pgrep tf_linux64 | head -n 1)
@@ -47,10 +51,15 @@ unload() {
 }
 
 trap unload SIGINT
-
-LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
+if [ "$DEBUG" = true ]; then
+    LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
+                            -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
+                            -ex "detach" | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
+else
+    LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
                             -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
                             -ex "detach" 2> /dev/null | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
+fi
 
 if [ -z "$LIB_HANDLE" ]; then
     echo "Failed to load library"
