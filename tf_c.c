@@ -22,8 +22,13 @@ FILE *logfile = NULL;
 __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 {
     FILE *log_file = fopen("/home/pat/Documents/tf_c/tf_c.log", "a");
+    static short hooked = 0;
 
-    fprintf(log_file, "tf_c unloaded\n");
+    if (hooked == 0)
+    {
+        fprintf(log_file, "Hi from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
+        hooked = 1;
+    }
 
     fclose(log_file);
 
@@ -93,7 +98,7 @@ __attribute__((constructor)) void init()
     void **client_mode_vtable = *(void ***)client_mode_interface;
     vlog(logfile, "ClientMode vfunc table found at %p\n", client_mode_vtable);
 
-    __int64_t (*create_move_original)(void *, float, void *) = client_mode_vtable[23];
+    create_move_original = client_mode_vtable[22];
     vlog(logfile, "CreateMove found at %p\n", create_move_original);
 
     const long page_size = sysconf(_SC_PAGESIZE);
@@ -109,7 +114,7 @@ __attribute__((constructor)) void init()
         return;
     }
 
-    client_mode_vtable[23] = create_move_hook;
+    client_mode_vtable[22] = create_move_hook;
 
     if (mprotect(table_page, page_size, PROT_READ) != 0)
     {
@@ -119,11 +124,8 @@ __attribute__((constructor)) void init()
         return;
     }
 
-    // Seems like the vtable is "hooked" and the address gets set right
-    // but its not getting called, verify this is the right table.
-    // Might as well xref the subroutine in ida too and make sure its the right cm
     vlog(logfile, "We should be hooked...\n");
-    vlog(logfile, "Original: %p, Hook: %p, [23]: %p\n", create_move_original, create_move_hook, client_mode_vtable[23]);
+    vlog(logfile, "Original: %p, Hook: %p, [22]: %p\n", create_move_original, create_move_hook, client_mode_vtable[22]);
 
     fclose(logfile);
 }
@@ -133,6 +135,8 @@ __attribute__((destructor)) void unload()
     FILE *log_file = fopen("/home/pat/Documents/tf_c/tf_c.log", "a");
 
     fprintf(log_file, "tf_c unloaded\n");
+
+    // TDB: Restore hook
 
     fclose(log_file);
 }
