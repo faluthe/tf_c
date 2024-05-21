@@ -5,6 +5,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+__int64_t (*create_move_original)(void *, float, void *) = NULL;
+void **client_mode_vtable = NULL;
+FILE *logfile = NULL;
+
 void vlog(FILE *log_file, const char *format, ...)
 {
     va_list args;
@@ -16,8 +20,31 @@ void vlog(FILE *log_file, const char *format, ...)
     va_end(args);
 }
 
-__int64_t (*create_move_original)(void *, float, void *) = NULL;
-FILE *logfile = NULL;
+void write_to_table(void **vtable, int index, void *func)
+{
+    const long page_size = sysconf(_SC_PAGESIZE);
+    // Sets last three digits to zero
+    void *table_page = (void *)((__uint64_t)vtable & ~(page_size - 1));
+    vlog(logfile, "vfunc table page found at %p\n", table_page);
+
+    if (mprotect(table_page, page_size, PROT_READ | PROT_WRITE) != 0)
+    {
+        vlog(logfile, "mprotect failed to change page protection\n");
+
+        fclose(logfile);
+        return;
+    }
+
+    vtable[22] = func;
+
+    if (mprotect(table_page, page_size, PROT_READ) != 0)
+    {
+        vlog(logfile, "mprotect failed to reset page protection\n");
+
+        fclose(logfile);
+        return;
+    }
+}
 
 __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 {
@@ -95,34 +122,13 @@ __attribute__((constructor)) void init()
     void *client_mode_interface = *client_mode_ptr;
     vlog(logfile, "ClientMode: %p\n", client_mode_interface);
 
-    void **client_mode_vtable = *(void ***)client_mode_interface;
+    client_mode_vtable = *(void ***)client_mode_interface;
     vlog(logfile, "ClientMode vfunc table found at %p\n", client_mode_vtable);
 
     create_move_original = client_mode_vtable[22];
     vlog(logfile, "CreateMove found at %p\n", create_move_original);
 
-    const long page_size = sysconf(_SC_PAGESIZE);
-    // Sets last three digits to zero
-    void *table_page = (void *)((__uint64_t)client_mode_vtable & ~(page_size - 1));
-    vlog(logfile, "vfunc table page found at %p\n", table_page);
-
-    if (mprotect(table_page, page_size, PROT_READ | PROT_WRITE) != 0)
-    {
-        vlog(logfile, "mprotect failed to change page protection\n");
-
-        fclose(logfile);
-        return;
-    }
-
-    client_mode_vtable[22] = create_move_hook;
-
-    if (mprotect(table_page, page_size, PROT_READ) != 0)
-    {
-        vlog(logfile, "mprotect failed to reset page protection\n");
-
-        fclose(logfile);
-        return;
-    }
+    write_to_table(client_mode_vtable, 22, create_move_hook);
 
     vlog(logfile, "We should be hooked...\n");
     vlog(logfile, "Original: %p, Hook: %p, [22]: %p\n", create_move_original, create_move_hook, client_mode_vtable[22]);
@@ -134,9 +140,9 @@ __attribute__((destructor)) void unload()
 {
     FILE *log_file = fopen("/home/pat/Documents/tf_c/tf_c.log", "a");
 
-    fprintf(log_file, "tf_c unloaded\n");
+    write_to_table(client_mode_vtable, 22, create_move_original);
 
-    // TDB: Restore hook
+    fprintf(log_file, "tf_c unloaded\n");
 
     fclose(log_file);
 }
