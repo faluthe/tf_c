@@ -11,6 +11,13 @@ PROCID=$(pgrep tf_linux64 | head -n 1)
 
 echo -e "Library Path: $LIB_PATH\nProcess ID: $PROCID"
 
+# Check if gdb is installed
+if ! command -v gdb &> /dev/null
+then
+    echo "GDB is not installed"
+    exit 1
+fi
+
 # Verify permissions
 if [[ "$EUID" -ne 0 ]]; then
     echo "Please run as root"
@@ -19,7 +26,7 @@ fi
 
 # Check if library exists
 if [ ! -f "$LIB_PATH" ]; then
-    echo "Library not found"
+    echo "Library $LIB_PATH not found"
     exit 1
 fi
 
@@ -51,6 +58,7 @@ unload() {
 }
 
 trap unload SIGINT
+
 if [ "$DEBUG" = true ]; then
     LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
                             -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
@@ -66,6 +74,6 @@ if [ -z "$LIB_HANDLE" ]; then
     exit 1
 fi
 
-echo "Library loaded successfully: $LIB_HANDLE"
+echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
 
 tail -f ./tf_c.log
