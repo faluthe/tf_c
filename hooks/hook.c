@@ -22,7 +22,7 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
     return create_move_original(this, sample_time, user_cmd);
 }
 
-void init_hooks()
+bool init_hooks()
 {
     // Deref vptr
     void **client_vtable = *(void ***)client_interface;
@@ -50,13 +50,22 @@ void init_hooks()
     create_move_original = client_mode_vtable[22];
     log_msg("CreateMove found at %p\n", create_move_original);
 
-    write_to_table(client_mode_vtable, 22, create_move_hook);
+    if (!write_to_table(client_mode_vtable, 22, create_move_hook))
+    {
+        log_msg("Failed to hook CreateMove\n");
+        return false;
+    }
 
     log_msg("We should be hooked...\n");
     log_msg("Original: %p, Hook: %p, [22]: %p\n", create_move_original, create_move_hook, client_mode_vtable[22]);
+
+    return true;
 }
 
 void restore_hooks()
 {
-    write_to_table(client_mode_vtable, 22, create_move_original);
+    if (write_to_table(client_mode_vtable, 22, create_move_original))
+    {
+        log_msg("Failed to restore CreateMove\n");
+    }
 }
