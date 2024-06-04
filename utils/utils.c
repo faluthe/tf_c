@@ -7,7 +7,7 @@ void log_msg(const char *format, ...)
 {
     if (log_file == NULL)
     {
-        log_file = fopen("~/Documents/tf_c/tf_c.log", "w");
+        log_file = fopen("/home/pat/Documents/tf_c/tf_c.log", "w");
     }
 
     va_list args;

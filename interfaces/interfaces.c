@@ -8,9 +8,11 @@
 
 typedef void *(*CreateInterfaceFn)(char *, __int32_t *);
 
+void *client_interface;
+
 CreateInterfaceFn get_factory(char *lib_name)
 {
-    char path[256] = "~/.steam/debian-installation/steamapps/common/Team Fortress 2/tf/bin/linux64/";
+    char path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/tf/bin/linux64/";
     strcat(path, lib_name);
 
     void *lib_handle = dlopen(path, RTLD_NOLOAD | RTLD_NOW);
@@ -22,7 +24,7 @@ CreateInterfaceFn get_factory(char *lib_name)
 
     log_msg("client.so loaded at %p\n", lib_handle);
 
-    __int64_t (*create_interface)(char *, __int32_t *) = dlsym(lib_handle, "CreateInterface");
+    CreateInterfaceFn create_interface = dlsym(lib_handle, "CreateInterface");
     if (!create_interface)
     {
         log_msg("Failed to get CreateInterface\n");

@@ -26,4 +26,6 @@ bool write_to_table(void **vtable, int index, void *func)
         log_msg("mprotect failed to reset page protection\n");
         return false;
     }
+
+    return true;
 }

@@ -2,6 +2,8 @@
 #include "interfaces/interfaces.h"
 #include "utils/utils.h"
 
+#include <stdio.h>
+#include <stdlib.h>
 
 __attribute__((destructor)) void unload()
 {
@@ -17,12 +19,14 @@ __attribute__((constructor)) void init()
     if (!init_interfaces())
     {
         log_msg("Failed to initialize interfaces\n");
-        return unload();
+        unload();
+        return;
     }
 
     if (!init_hooks())
     {
         log_msg("Failed to initialize hooks\n");
-        return unload();
+        unload();
+        return;
     }
 }

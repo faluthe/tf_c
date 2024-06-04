@@ -1,13 +1,13 @@
 #!/bin/bash
 
 DEBUG=true
-
-if [ "$DEBUG" = true ]; then
-    gcc -shared -fPIC tf_c.c -o tf_c.so -Wall
-fi
-
 LIB_PATH=$(pwd)/tf_c.so
 PROCID=$(pgrep tf_linux64 | head -n 1)
+
+if [ "$DEBUG" = true ]; then
+    echo "Debug mode enabled"
+    gcc *.c */*.c -shared -fpic -g -o tf_c.so -Wall
+fi
 
 echo -e "Library Path: $LIB_PATH\nProcess ID: $PROCID"
 
@@ -60,11 +60,20 @@ unload() {
 trap unload SIGINT
 
 if [ "$DEBUG" = true ]; then
-    LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
+    GDB_OUT=$(sudo gdb -n --batch -ex "attach $PROCID" \
                             -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
-                            -ex "detach" | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
+                            -ex "call ((char * (*) (void)) dlerror)()" -ex "detach")
+    
+    echo "$GDB_OUT"
+    LIB_HANDLE=$(echo "$GDB_OUT" | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
+    ERROR=$(echo "$GDB_OUT" | grep -oP '\$2 = 0x[0-9a-f]+ "\K[^"]+')
+    
+    if [ -n "$ERROR" ]; then
+        echo "Error: $ERROR"
+        exit 1
+    fi
 else
-    LIB_HANDLE=$(gdb -n --batch -ex "attach $PROCID" \
+    LIB_HANDLE=$(sudo gdb -n --batch -ex "attach $PROCID" \
                             -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
                             -ex "detach" 2> /dev/null | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
 fi
