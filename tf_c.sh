@@ -1,9 +1,13 @@
 #!/bin/bash
 
-DEBUG=true
+DEBUG=false
+if [ "$1" = "debug" ]; then
+    DEBUG=true
+    BREAKPOINTS=""
+fi
+
 LIB_PATH=$(pwd)/tf_c.so
 PROCID=$(pgrep tf_linux64 | head -n 1)
-BREAKPOINTS="log_msg"
 
 if [ "$DEBUG" = true ]; then
     echo "Debug mode enabled"
@@ -51,4 +55,5 @@ else
     echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
 
     tail -f ./tf_c.log
+    rm tf_c.log
 fi

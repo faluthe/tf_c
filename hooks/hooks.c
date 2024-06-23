@@ -12,11 +12,19 @@ void **client_mode_vtable = NULL;
 __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 {
     static bool hooked = false;
+    static unsigned long tick_count = 0ll;
+
+    tick_count++;
 
     if (!hooked)
     {
         log_msg("Hi from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
         hooked = true;
+    }
+
+    if (tick_count % 100 == 0)
+    {
+        log_msg("Hi again from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
     }
 
     return create_move_original(this, sample_time, user_cmd);
