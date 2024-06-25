@@ -15,8 +15,9 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
     static bool hooked = false;
 
     __int64_t rc = create_move_original(this, sample_time, user_cmd);
+    void *localplayer = get_localplayer();
 
-    if (!rc)
+    if (!rc || !localplayer)
     {
         return rc;
     }
@@ -24,20 +25,11 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
     if (!hooked)
     {
         log_msg("Hi from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
+        log_msg("Localplayer: %p\n", localplayer);
         hooked = true;
     }
 
-    void *localplayer = get_localplayer();
-    
-    if (!localplayer)
-    {
-        return rc;
-    }
-    
-    log_msg("Localplayer: %p\n", localplayer);
-
     __int32_t flags = *(__int32_t *)((__uint64_t)(localplayer) + 0x460);
-    log_msg("Flags: %d\n", flags);
     
     if ((flags & 1) == 0)
     {
@@ -61,29 +53,19 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 
 bool init_hooks()
 {
-    // Deref vptr
+    /*
+     * https://github.com/OthmanAba/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/game/client/cdll_client_int.cpp#L1255
+     * CHLClient::HudProcessInput is just a call to g_pClientMode->ProcessInput. Globals are stored as effective addresses.
+     * Effective addresses are 4 byte offsets, offset from the instruction pointer (address of next instruction).
+     * Manually calculate the effective address of g_pClientMode and dereference it to get the interface.
+    */
     void **client_vtable = *(void ***)client_interface;
-    log_msg("Client vfunc table found at %p\n", client_vtable);
-
     void *hud_process_input_addr = client_vtable[10];
-    log_msg("hud_process_input found at %p\n", hud_process_input_addr);
-
-    __uint32_t *client_mode_eaddr = (__uint32_t *)((__uint64_t)(hud_process_input_addr) + 3);
-    log_msg("Ptr to ClientMode effective address (offset): %p\n", client_mode_eaddr);
-    log_msg("ClientMode effective address (offset): %p\n", *client_mode_eaddr);
-
+    __uint32_t client_mode_eaddr = *(__uint32_t *)((__uint64_t)(hud_process_input_addr) + 3);
     void *client_mode_next_instruction = (void *)((__uint64_t)(hud_process_input_addr) + 7);
-    log_msg("Next instruction after hud_process_input: %p\n", client_mode_next_instruction);
-
-    void **client_mode_ptr = (void **)((__uint64_t)(client_mode_next_instruction) + *client_mode_eaddr);
-    log_msg("Ptr to ClientMode: %p\n", client_mode_ptr);
-
-    void *client_mode_interface = *client_mode_ptr;
-    log_msg("ClientMode: %p\n", client_mode_interface);
-
+    void *client_mode_interface = *(void **)((__uint64_t)(client_mode_next_instruction) + client_mode_eaddr);
+    
     client_mode_vtable = *(void ***)client_mode_interface;
-    log_msg("ClientMode vfunc table found at %p\n", client_mode_vtable);
-
     create_move_original = client_mode_vtable[22];
     log_msg("CreateMove found at %p\n", create_move_original);
 

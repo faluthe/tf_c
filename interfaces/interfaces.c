@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 typedef void *(*CreateInterfaceFn)(const char *, __int32_t *);
 
@@ -23,15 +24,21 @@ const char arch_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common
 const char arch_bin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
 
 // Debian consts
-const char ubuntu_tfbin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/tf/bin/linux64/";
-const char ubuntu_bin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/bin/linux64/";
+// const char ubuntu_tfbin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/tf/bin/linux64/";
+// const char ubuntu_bin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/bin/linux64/";
 
 CreateInterfaceFn get_factory(const char base_path[256], char *lib_name)
 {
-    // TDB: verify path exists
     char path[256];
     strcpy(path, base_path);
     strcat(path, lib_name);
+
+    struct stat buffer;
+    if (stat(path, &buffer) != 0)
+    {
+        log_msg("Failed to find %s\n", lib_name);
+        return NULL;
+    }
 
     void *lib_handle = dlopen(path, RTLD_NOLOAD | RTLD_NOW);
     if (!lib_handle)
@@ -40,7 +47,7 @@ CreateInterfaceFn get_factory(const char base_path[256], char *lib_name)
         return NULL;
     }
 
-    log_msg("client.so loaded at %p\n", lib_handle);
+    log_msg("%s loaded at %p\n", lib_name, lib_handle);
 
     CreateInterfaceFn create_interface = dlsym(lib_handle, "CreateInterface");
     if (!create_interface)
@@ -65,6 +72,7 @@ void *get_interface(CreateInterfaceFn factory, const char *version)
     }
 
     log_msg("%s interface found at %p\n", version, interface);
+    
     return interface;
 }
 
@@ -75,7 +83,7 @@ bool init_interfaces()
 
     if (!client_factory || !engine_factory)
     {
-        log_msg("Failed to get factories\n");
+        log_msg("Failed to get all factories\n");
         return false;
     }
 

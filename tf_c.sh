@@ -9,9 +9,9 @@ fi
 LIB_PATH=$(pwd)/tf_c.so
 PROCID=$(pgrep tf_linux64 | head -n 1)
 
-if [ "$DEBUG" = true ]; then
-    echo "Debug mode enabled"
-    gcc *.c */*.c -shared -fpic -g -o tf_c.so -Wall
+if [ "$DEBUG" = true ] || [ "$COMPILE" = true ]; then
+    echo "Compiling shared library with $(find . -name '*.c')"
+    gcc $(find . -name '*.c') -shared -fpic -g -o tf_c.so -Wall
 fi
 
 echo -e "Library Path: $LIB_PATH\nProcess ID: $PROCID"

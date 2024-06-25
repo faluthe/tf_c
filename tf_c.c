@@ -19,14 +19,12 @@ __attribute__((constructor)) void init()
     if (!init_interfaces())
     {
         log_msg("Failed to initialize interfaces\n");
-        unload();
         return;
     }
 
     if (!init_hooks())
     {
         log_msg("Failed to initialize hooks\n");
-        unload();
         return;
     }
 }
