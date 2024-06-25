@@ -1,4 +1,5 @@
 #include "../interfaces/interfaces.h"
+#include "../source_sdk/engine_client/engine_client.h"
 #include "../utils/utils.h"
 #include "hooks.h"
 
@@ -12,9 +13,13 @@ void **client_mode_vtable = NULL;
 __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 {
     static bool hooked = false;
-    static unsigned long tick_count = 0ll;
 
-    tick_count++;
+    __int64_t rc = create_move_original(this, sample_time, user_cmd);
+
+    if (!rc)
+    {
+        return rc;
+    }
 
     if (!hooked)
     {
@@ -22,12 +27,36 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
         hooked = true;
     }
 
-    if (tick_count % 100 == 0)
+    void *localplayer = get_localplayer();
+    
+    if (!localplayer)
     {
-        log_msg("Hi again from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
+        return rc;
+    }
+    
+    log_msg("Localplayer: %p\n", localplayer);
+
+    __int32_t flags = *(__int32_t *)((__uint64_t)(localplayer) + 0x460);
+    log_msg("Flags: %d\n", flags);
+    
+    if ((flags & 1) == 0)
+    {
+        *(__int32_t *)((__uint64_t)(user_cmd) + 0x28) &= !2;
     }
 
-    return create_move_original(this, sample_time, user_cmd);
+    // TBD: Recreate UserCmd struct
+
+    // __int32_t tick_count = *(__int32_t *)((__uint64_t)(user_cmd) + 0x8);
+    // if (tick_count == 0)
+    // {
+    //     return rc;
+    // }
+
+    // log_msg("Tick count: %d\n", tick_count);
+    // __int32_t buttons = *(__int32_t *)((__uint64_t)(user_cmd) + 0x28);
+    // log_msg("Buttons: %d\n", buttons);
+
+    return rc;
 }
 
 bool init_hooks()
@@ -72,6 +101,12 @@ bool init_hooks()
 
 void restore_hooks()
 {
+    if (!client_mode_vtable)
+    {
+        log_msg("ClientMode vtable not found, no restore necessary\n");
+        return;
+    }
+    
     if (write_to_table(client_mode_vtable, 22, create_move_original))
     {
         log_msg("Failed to restore CreateMove\n");
