@@ -1,9 +1,11 @@
 #include "../interfaces/interfaces.h"
 #include "../source_sdk/engine_client/engine_client.h"
+#include "../source_sdk/entity_list/entity_list.h"
 #include "../utils/utils.h"
 #include "hooks.h"
 
 #include <stdbool.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -30,23 +32,86 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
     }
 
     __int32_t flags = *(__int32_t *)((__uint64_t)(localplayer) + 0x460);
-    
-    if ((flags & 1) == 0)
-    {
-        *(__int32_t *)((__uint64_t)(user_cmd) + 0x28) &= !2;
-    }
+    __int32_t buttons = *(__int32_t *)((__uint64_t)(user_cmd) + 0x28);
 
     // TBD: Recreate UserCmd struct
 
-    // __int32_t tick_count = *(__int32_t *)((__uint64_t)(user_cmd) + 0x8);
-    // if (tick_count == 0)
-    // {
-    //     return rc;
-    // }
+    __int32_t tick_count = *(__int32_t *)((__uint64_t)(user_cmd) + 0x8);
+    if (tick_count < 1)
+    {
+        return rc;
+    }
 
-    // log_msg("Tick count: %d\n", tick_count);
-    // __int32_t buttons = *(__int32_t *)((__uint64_t)(user_cmd) + 0x28);
-    // log_msg("Buttons: %d\n", buttons);
+    float lowest_score = 999999.0f;
+    float target_xy_angle = 0.0f;
+    float target_hz_angle = 0.0f;
+    int target_index = 0;
+
+    // 2048 = ads
+    if ((buttons & 2048) != 0)
+    {
+        for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
+        {
+            void *entity = get_client_entity(ent_index);
+
+            if (entity == NULL || entity == localplayer)
+            {
+                continue;
+            }
+
+            __int32_t ent_health = *(__int32_t *)((__uint64_t)(entity) + 0x0D4);
+
+            // TBD: Check if entity is alive
+            if (ent_health <= 1 || ent_health > 450)
+            {
+                continue;
+            }
+
+            float target_pos_x = *(float *)((__uint64_t)(entity) + 0x340);
+            float target_pos_y = *(float *)((__uint64_t)(entity) + 0x344);
+            float target_pos_z = *(float *)((__uint64_t)(entity) + 0x348);
+
+            float position_x = *(float *)((__uint64_t)(localplayer) + 0x340);
+            float position_y = *(float *)((__uint64_t)(localplayer) + 0x344);
+            float position_z = *(float *)((__uint64_t)(localplayer) + 0x348);
+
+            float x_diff = target_pos_x - position_x;
+            float y_diff = target_pos_y - position_y;
+            float z_diff = target_pos_z - position_z;
+            float hypo = sqrt(x_diff * x_diff + y_diff * y_diff);
+            float xy_angle = atan2(y_diff, x_diff) * 180 / M_PI;
+            float hz_angle = atan2(z_diff, hypo) * 180 / M_PI;
+
+            // viewangle_x is roll
+            float viewangles_y = *(float *)((__uint64_t)(user_cmd) + 0x10);
+            float viewangles_z = *(float *)((__uint64_t)(user_cmd) + 0x14);
+
+            float angle_score = sqrt(((xy_angle - viewangles_z) * (xy_angle - viewangles_z)) + ((viewangles_y - hz_angle) * (viewangles_y - hz_angle)));
+            // float pos_score = abs(x_diff) + abs(y_diff) + abs(z_diff);
+            // float pos_modifier = 0.5f;
+            // float ent_score = (pos_score * pos_modifier) + angle_score;
+
+            if (angle_score < lowest_score)
+            {
+                lowest_score = angle_score;
+                target_xy_angle = xy_angle;
+                target_hz_angle = hz_angle;
+                target_index = ent_index;
+            }
+        }
+
+        if (target_index != 0)
+        {
+            log_msg("Target %d score %d\n", target_index, lowest_score);
+            *(float *)((__uint64_t)(user_cmd) + 0x14) = target_xy_angle;
+            *(float *)((__uint64_t)(user_cmd) + 0x10) = -target_hz_angle;
+        }
+    }
+
+    if ((flags & 1) == 0)
+    {
+        *(__int32_t *)((__uint64_t)(user_cmd) + 0x28) &= ~2;
+    }
 
     return rc;
 }

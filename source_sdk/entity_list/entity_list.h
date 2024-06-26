@@ -1,3 +1,4 @@
 #include <stdint.h>
 
-void *get_client_entity(void *interface, __int32_t index);
+void set_entity_list_interface(void *entity_list_interface);
+void *get_client_entity(__int32_t index);

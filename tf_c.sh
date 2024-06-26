@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DEBUG=false
+COMPILE=true
 if [ "$1" = "debug" ]; then
     DEBUG=true
     BREAKPOINTS=""

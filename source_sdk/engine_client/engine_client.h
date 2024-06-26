@@ -2,4 +2,6 @@
 
 #include <stdint.h>
 
-__int32_t get_localplayer_index(void *interface);
+void set_engine_client_interface(void *engine_client_interface);
+__int32_t get_localplayer_index();
+__int32_t get_max_clients();
