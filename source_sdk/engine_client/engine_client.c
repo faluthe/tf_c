@@ -18,6 +18,14 @@ __int32_t get_localplayer_index()
     return func(interface);
 }
 
+void *get_net_channel_info()
+{
+    void **vtable = *(void ***)interface;
+    void *(*func)(void *) = vtable[72];
+
+    return func(interface);
+}
+
 __int32_t get_max_clients()
 {
     // void **vtable = *(void ***)interface;

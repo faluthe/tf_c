@@ -1,6 +1,8 @@
 #include "../interfaces/interfaces.h"
 #include "../source_sdk/engine_client/engine_client.h"
+#include "../source_sdk/entity/entity.h"
 #include "../source_sdk/entity_list/entity_list.h"
+#include "../source_sdk/math/vec3.h"
 #include "../utils/utils.h"
 #include "hooks.h"
 
@@ -15,6 +17,7 @@ void **client_mode_vtable = NULL;
 __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
 {
     static bool hooked = false;
+    static void *net_chan = NULL;
 
     __int64_t rc = create_move_original(this, sample_time, user_cmd);
     void *localplayer = get_localplayer();
@@ -28,28 +31,35 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
     {
         log_msg("Hi from hook function! time: %f ptr: %p og: %p\n", sample_time, user_cmd, create_move_original);
         log_msg("Localplayer: %p\n", localplayer);
+        net_chan = get_net_channel_info();
+        log_msg("netchannelinfo: %p\n", net_chan);
         hooked = true;
     }
 
-    __int32_t flags = *(__int32_t *)((__uint64_t)(localplayer) + 0x460);
+    __int32_t flags = get_ent_flags(localplayer);
+    __int32_t team = get_ent_team(localplayer);
     __int32_t buttons = *(__int32_t *)((__uint64_t)(user_cmd) + 0x28);
 
-    // TBD: Recreate UserCmd struct
-
     __int32_t tick_count = *(__int32_t *)((__uint64_t)(user_cmd) + 0x8);
+
     if (tick_count < 1)
     {
         return rc;
     }
 
-    float lowest_score = 999999.0f;
-    float target_xy_angle = 0.0f;
-    float target_hz_angle = 0.0f;
-    int target_index = 0;
-
-    // 2048 = ads
-    if ((buttons & 2048) != 0)
+    if ((buttons & 8192) == 0)
     {
+        void **net_chan_vtable = *(void ***)net_chan;
+        float (*get_avg_packets)(void *, int) = net_chan_vtable[14];
+        // FLOW_OUTGOING = 0, FLOW_INCOMING = 1
+        float avg_packet_in = get_avg_packets(net_chan, 1);
+
+        float smallest_angle = 999999.0f;
+        float target_yaw_angle = 0.0f;
+        float target_pitch_angle = 0.0f;
+        struct vec3_t target_pos = {0.0f, 0.0f, 0.0f};
+        int target_index = 0;
+
         for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
         {
             void *entity = get_client_entity(ent_index);
@@ -59,52 +69,60 @@ __int64_t create_move_hook(void *this, float sample_time, void *user_cmd)
                 continue;
             }
 
-            __int32_t ent_health = *(__int32_t *)((__uint64_t)(entity) + 0x0D4);
+            __int32_t ent_health = get_ent_health(entity);
+            __int32_t ent_team = get_ent_team(entity);
 
             // TBD: Check if entity is alive
-            if (ent_health <= 1 || ent_health > 450)
+            if (ent_health <= 1 || ent_health > 450 || ent_team == team)
             {
                 continue;
             }
 
-            float target_pos_x = *(float *)((__uint64_t)(entity) + 0x340);
-            float target_pos_y = *(float *)((__uint64_t)(entity) + 0x344);
-            float target_pos_z = *(float *)((__uint64_t)(entity) + 0x348);
+            struct vec3_t ent_pos = get_ent_eye_pos(entity);
+            struct vec3_t ent_vel = get_ent_velocity(entity);
+            struct vec3_t local_pos = get_ent_eye_pos(localplayer);
+            struct vec3_t local_vel = get_ent_velocity(localplayer);
 
-            float position_x = *(float *)((__uint64_t)(localplayer) + 0x340);
-            float position_y = *(float *)((__uint64_t)(localplayer) + 0x344);
-            float position_z = *(float *)((__uint64_t)(localplayer) + 0x348);
+            // Add hammer units per tick to local position
+            local_pos.x += (local_vel.x / avg_packet_in);
+            local_pos.y += (local_vel.y / avg_packet_in);
+            local_pos.z += (local_vel.z / avg_packet_in);
 
-            float x_diff = target_pos_x - position_x;
-            float y_diff = target_pos_y - position_y;
-            float z_diff = target_pos_z - position_z;
+            // Add hammer units per tick to entity position
+            ent_pos.x += (ent_vel.x / avg_packet_in);
+            ent_pos.y += (ent_vel.y / avg_packet_in);
+            ent_pos.z += (ent_vel.z / avg_packet_in);
+            
+            float x_diff = ent_pos.x - local_pos.x;
+            float y_diff = ent_pos.y - local_pos.y;
+            float z_diff = ent_pos.z - local_pos.z;
             float hypo = sqrt(x_diff * x_diff + y_diff * y_diff);
-            float xy_angle = atan2(y_diff, x_diff) * 180 / M_PI;
-            float hz_angle = atan2(z_diff, hypo) * 180 / M_PI;
+            float yaw_angle = atan2(y_diff, x_diff) * 180 / M_PI;
+            float pitch_angle = atan2(z_diff, hypo) * 180 / M_PI;
 
             // viewangle_x is roll
-            float viewangles_y = *(float *)((__uint64_t)(user_cmd) + 0x10);
-            float viewangles_z = *(float *)((__uint64_t)(user_cmd) + 0x14);
+            float current_pitch = *(float *)((__uint64_t)(user_cmd) + 0x10);
+            float current_yaw = *(float *)((__uint64_t)(user_cmd) + 0x14);
 
-            float angle_score = sqrt(((xy_angle - viewangles_z) * (xy_angle - viewangles_z)) + ((viewangles_y - hz_angle) * (viewangles_y - hz_angle)));
-            // float pos_score = abs(x_diff) + abs(y_diff) + abs(z_diff);
-            // float pos_modifier = 0.5f;
-            // float ent_score = (pos_score * pos_modifier) + angle_score;
+            float delta_pitch = pitch_angle - current_pitch;
+            float delta_yaw = yaw_angle - current_yaw;
+            float angle_to_ent = sqrt(delta_pitch * delta_pitch + delta_yaw * delta_yaw);
 
-            if (angle_score < lowest_score)
-            {
-                lowest_score = angle_score;
-                target_xy_angle = xy_angle;
-                target_hz_angle = hz_angle;
+            if (angle_to_ent < smallest_angle)
+            {          
+                smallest_angle = angle_to_ent;
+                target_yaw_angle = yaw_angle;
+                target_pitch_angle = pitch_angle;
+                target_pos = ent_pos;
                 target_index = ent_index;
             }
         }
 
         if (target_index != 0)
         {
-            log_msg("Target %d score %d\n", target_index, lowest_score);
-            *(float *)((__uint64_t)(user_cmd) + 0x14) = target_xy_angle;
-            *(float *)((__uint64_t)(user_cmd) + 0x10) = -target_hz_angle;
+            *(float *)((__uint64_t)(user_cmd) + 0x14) = target_yaw_angle;
+            // Negative pitch is up
+            *(float *)((__uint64_t)(user_cmd) + 0x10) = -target_pitch_angle;
         }
     }
 
