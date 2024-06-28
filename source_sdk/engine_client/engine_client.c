@@ -28,10 +28,9 @@ void *get_net_channel_info()
 
 __int32_t get_max_clients()
 {
+    // Wrong index, using const for now
+
     // void **vtable = *(void ***)interface;
-
-    // log_msg("vtable: %p\n", vtable);
-
     // __int32_t (*func)(void *) = vtable[20];
 
     return 32;
