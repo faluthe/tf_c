@@ -1,6 +1,7 @@
 #include "../utils/utils.h"
 #include "interfaces.h"
 
+#include "../source_sdk/global_vars/global_vars.h"
 #include "../source_sdk/engine_client/engine_client.h"
 #include "../source_sdk/entity_list/entity_list.h"
 
@@ -13,7 +14,8 @@
 typedef void *(*CreateInterfaceFn)(const char *, __int32_t *);
 
 // Globals
-void *client_interface;
+void **client_vtable = NULL;
+void **client_mode_vtable = NULL;
 
 // Locals
 static const char *client_version = "VClient017";
@@ -88,7 +90,7 @@ bool init_interfaces()
         return false;
     }
 
-    client_interface = get_interface(client_factory, client_version);
+    void *client_interface = get_interface(client_factory, client_version);
     void *engine_client_interface = get_interface(engine_factory, engine_client_version);
     void *entity_list_interface = get_interface(client_factory, entity_list_version);
 
@@ -100,6 +102,26 @@ bool init_interfaces()
 
     set_engine_client_interface(engine_client_interface);
     set_entity_list_interface(entity_list_interface);
+
+    /*
+     * https://github.com/OthmanAba/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/game/client/cdll_client_int.cpp#L1255
+     * CHLClient::HudProcessInput is just a call to g_pClientMode->ProcessInput. Globals are stored as effective addresses.
+     * Effective addresses are 4 byte offsets, offset from the instruction pointer (address of next instruction).
+     * Manually calculate the effective address of g_pClientMode and dereference it to get the interface.
+    */
+    client_vtable = *(void ***)client_interface;
+    void *hud_process_input_addr = client_vtable[10];
+    __uint32_t client_mode_eaddr = *(__uint32_t *)((__uint64_t)(hud_process_input_addr) + 0x3);
+    void *client_mode_next_instruction = (void *)((__uint64_t)(hud_process_input_addr) + 0x7);
+    void *client_mode_interface = *(void **)((__uint64_t)(client_mode_next_instruction) + client_mode_eaddr);
+
+    // TBD remove unnecessary casts
+    void *hud_update = client_vtable[11];
+    __uint32_t global_vars_eaddr = *(__uint32_t *)((__uint64_t)(hud_update) + 0x16);
+    void *global_vars_next_instruction = (void *)((__uint64_t)(hud_update) + 0x1A);
+    set_global_vars_ptr(*(void **)((__uint64_t)(global_vars_next_instruction) + global_vars_eaddr));
+    
+    client_mode_vtable = *(void ***)client_mode_interface;
 
     return true;
 }
