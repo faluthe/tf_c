@@ -8,6 +8,7 @@
 #include "../../utils/utils.h"
 
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -27,14 +28,13 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
             continue;
         }
 
-        __int32_t ent_health = get_ent_health(entity);
-
         // TBD: Check if entity is alive
-        if (ent_health <= 1 || ent_health > 450 || get_ent_team(entity) == get_ent_team(localplayer))
+        if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer))
         {
             continue;
         }
 
+        // Bones are different per class, this is just a placeholder
         static int bone_to_aim_at = 6;
 
         struct vec3_t ent_pos = get_bone_pos(entity, bone_to_aim_at);

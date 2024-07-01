@@ -32,10 +32,8 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     {
         return false;
     }
-
-    log_msg("buttons %d\n", user_cmd->buttons);
-
-    if ((user_cmd->buttons & 2048) != 0)
+    
+    if (true)
     {
         aim_at_best_target(localplayer, user_cmd);
     }

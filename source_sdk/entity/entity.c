@@ -3,6 +3,7 @@
 
 #include "entity.h"
 
+#include <stdbool.h>
 
 __int32_t get_ent_flags(void *entity)
 {
@@ -41,6 +42,7 @@ struct vec3_t get_ent_velocity(void *entity)
 __int32_t setup_bones(void *entity, void *bone_to_world_out, __int32_t max_bones, __int32_t bone_mask, float current_time)
 {
     void **vtable = *(void ***)entity;
+
     __int32_t (*func)(void *, void *, __int32_t, __int32_t, float) = vtable[96];
 
     return func(entity, bone_to_world_out, max_bones, bone_mask, current_time);
@@ -57,4 +59,19 @@ struct vec3_t get_bone_pos(void *entity, int bone_num)
     }
 
     return (struct vec3_t){0.0f, 0.0f, 0.0f};
+}
+
+bool is_ent_dormant(void *entity)
+{
+    void *networkable = (void *)((__uint64_t)(entity) + 0x10);
+    void **vtable = *(void ***)networkable;
+
+    bool (*func)(void *) = vtable[8];
+
+    return func(networkable);
+}
+
+bool get_ent_lifestate(void *entity)
+{
+    return *(__int8_t *)((__uint64_t)(entity) + 0x746);
 }
