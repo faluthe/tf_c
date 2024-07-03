@@ -35,3 +35,12 @@ __int32_t get_max_clients()
 
     return 32;
 }
+
+void get_screen_size(int *width, int *height)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, int *, int *) = vtable[5];
+
+    func(interface, width, height);
+}

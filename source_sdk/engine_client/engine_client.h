@@ -6,3 +6,4 @@ void set_engine_client_interface(void *engine_client_interface);
 __int32_t get_localplayer_index();
 void *get_net_channel_info();
 __int32_t get_max_clients();
+void get_screen_size(int *width, int *height);

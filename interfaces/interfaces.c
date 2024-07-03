@@ -1,9 +1,12 @@
 #include "../utils/utils.h"
 #include "interfaces.h"
 
-#include "../source_sdk/global_vars/global_vars.h"
+#include "../source_sdk/debug_overlay/debug_overlay.h"
 #include "../source_sdk/engine_client/engine_client.h"
 #include "../source_sdk/entity_list/entity_list.h"
+#include "../source_sdk/global_vars/global_vars.h"
+#include "../source_sdk/panel/panel.h"
+#include "../source_sdk/surface/surface.h"
 
 #include <dlfcn.h>
 #include <stdint.h>
@@ -16,11 +19,15 @@ typedef void *(*CreateInterfaceFn)(const char *, __int32_t *);
 // Globals
 void **client_vtable = NULL;
 void **client_mode_vtable = NULL;
+void **vgui_panel_vtable = NULL;
 
 // Locals
 static const char *client_version = "VClient017";
+static const char *debug_overlay_version = "VDebugOverlay003";
 static const char *engine_client_version = "VEngineClient014";
 static const char *entity_list_version = "VClientEntityList003";
+static const char *surface_version = "VGUI_Surface030";
+static const char *vgui_panel_version = "VGUI_Panel009";
 
 // Arch consts
 static const char arch_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
@@ -83,8 +90,10 @@ bool init_interfaces()
 {
     CreateInterfaceFn client_factory = get_factory(arch_tfbin_path, "client.so");
     CreateInterfaceFn engine_factory = get_factory(arch_bin_path, "engine.so");
+    CreateInterfaceFn surface_factory = get_factory(arch_bin_path, "vguimatsurface.so");
+    CreateInterfaceFn vgui_factory = get_factory(arch_bin_path, "vgui2.so");
 
-    if (!client_factory || !engine_factory)
+    if (!client_factory || !engine_factory || !surface_factory || !vgui_factory)
     {
         log_msg("Failed to get all factories\n");
         return false;
@@ -93,8 +102,11 @@ bool init_interfaces()
     void *client_interface = get_interface(client_factory, client_version);
     void *engine_client_interface = get_interface(engine_factory, engine_client_version);
     void *entity_list_interface = get_interface(client_factory, entity_list_version);
+    void *surface_interface = get_interface(surface_factory, surface_version);
+    void *vgui_panel_interface = get_interface(vgui_factory, vgui_panel_version);
+    void *debug_overlay_interface = get_interface(engine_factory, debug_overlay_version);
 
-    if (!client_interface || !engine_client_interface || !entity_list_interface)
+    if (!client_interface || !engine_client_interface || !entity_list_interface || !surface_interface || !vgui_panel_interface || !debug_overlay_interface)
     {
         log_msg("Failed to get all interfaces\n");
         return false;
@@ -102,6 +114,11 @@ bool init_interfaces()
 
     set_engine_client_interface(engine_client_interface);
     set_entity_list_interface(entity_list_interface);
+    set_surface_interface(surface_interface);
+    set_panel_interface(vgui_panel_interface);
+    set_debug_overlay_interface(debug_overlay_interface);
+
+    vgui_panel_vtable = *(void ***)vgui_panel_interface;
 
     /*
      * https://github.com/OthmanAba/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/game/client/cdll_client_int.cpp#L1255
