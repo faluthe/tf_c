@@ -19,7 +19,7 @@ bool write_to_table(void **vtable, int index, void *func)
         return false;
     }
 
-    vtable[22] = func;
+    vtable[index] = func;
 
     if (mprotect(table_page, page_size, PROT_READ) != 0)
     {
