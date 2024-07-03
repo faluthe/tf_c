@@ -33,11 +33,12 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         return false;
     }
     
-    if (true)
+    if ((user_cmd->buttons & 1) != 0)
     {
         aim_at_best_target(localplayer, user_cmd);
     }
 
+    // If player is not on ground unset jump button flag
     if ((get_ent_flags(localplayer) & 1) == 0)
     {
         user_cmd->buttons &= ~2;
