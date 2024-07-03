@@ -1,4 +1,6 @@
 
+#include "../../source_sdk/debug_overlay/debug_overlay.h"
+
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/entity_list/entity_list.h"
@@ -14,7 +16,7 @@
 
 void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
 {
-    float smallest_angle = 999999.0f;
+    float smallest_distance = 999999.0f;
     float target_yaw_angle = 0.0f;
     float target_pitch_angle = 0.0f;
     int target_index = 0;
@@ -28,7 +30,6 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
             continue;
         }
 
-        // TBD: Check if entity is alive
         if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer))
         {
             continue;
@@ -56,29 +57,25 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         float x_diff = ent_pos.x - local_pos.x;
         float y_diff = ent_pos.y - local_pos.y;
         float z_diff = ent_pos.z - local_pos.z;
+        // Bad name
         float hypo = sqrt(x_diff * x_diff + y_diff * y_diff);
         float yaw_angle = atan2(y_diff, x_diff) * 180 / M_PI;
         float pitch_angle = atan2(z_diff, hypo) * 180 / M_PI;
 
-        // viewangle_z is roll
-        float current_pitch = user_cmd->viewangles.x;
-        float current_yaw = user_cmd->viewangles.y;
-
-        float delta_pitch = abs(pitch_angle - current_pitch);
-        if (delta_pitch > 180)
+        struct vec3_t ent2d;
+        if (screen_position(&ent_pos, &ent2d) != 0)
         {
-            delta_pitch = 360 - delta_pitch;
+            continue;
         }
-        float delta_yaw = abs(yaw_angle - current_yaw);
-        if (delta_yaw > 180)
-        {
-            delta_yaw = 360 - delta_yaw;
-        }
-        float angle_to_ent = delta_yaw + delta_pitch;
 
-        if (angle_to_ent < smallest_angle)
+        int width, height;
+        get_screen_size(&width, &height);
+
+        float distance_to_ent = sqrt((width / 2 - ent2d.x) * (width / 2 - ent2d.x) + (height / 2 - ent2d.y) * (height / 2 - ent2d.y));
+
+        if (distance_to_ent < smallest_distance)
         {          
-            smallest_angle = angle_to_ent;
+            smallest_distance = distance_to_ent;
             target_yaw_angle = yaw_angle;
             target_pitch_angle = pitch_angle;
             target_index = ent_index;
