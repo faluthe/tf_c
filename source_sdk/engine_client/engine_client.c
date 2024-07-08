@@ -1,6 +1,7 @@
 #include "../../utils/utils.h"
 #include "engine_client.h"
 
+#include <stdint.h>
 #include <stddef.h>
 
 static void *interface = NULL;
@@ -31,7 +32,7 @@ __int32_t get_max_clients()
     // Wrong index, using const for now
 
     // void **vtable = *(void ***)interface;
-    // __int32_t (*func)(void *) = vtable[20];
+    // __int32_t (*func)(void *) = vtable[21];
 
     return 32;
 }
@@ -43,4 +44,12 @@ void get_screen_size(int *width, int *height)
     void (*func)(void *, int *, int *) = vtable[5];
 
     func(interface, width, height);
+}
+
+__int8_t is_in_game()
+{
+    void **vtable = *(void ***)interface;
+    __int8_t (*func)(void *) = vtable[26];
+
+    return func(interface);
 }

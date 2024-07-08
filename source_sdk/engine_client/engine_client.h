@@ -7,3 +7,4 @@ __int32_t get_localplayer_index();
 void *get_net_channel_info();
 __int32_t get_max_clients();
 void get_screen_size(int *width, int *height);
+__int8_t is_in_game();
