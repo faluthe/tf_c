@@ -8,18 +8,29 @@
 #include "../../source_sdk/math/vec3.h"
 #include "../../source_sdk/user_cmd.h"
 #include "../../utils/utils.h"
+#include "../hooks.h"
 
 #include <math.h>
+#include <stdatomic.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 
+atomic_int g_target_x = 0;
+atomic_int g_target_y = 0;
+atomic_int g_target_index = 0;
+
+// TDB: functionize this
 void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
 {
     float smallest_distance = 999999.0f;
     float target_yaw_angle = 0.0f;
     float target_pitch_angle = 0.0f;
-    int target_index = 0;
+    int target_ent_index = 0;
+
+    atomic_store(&g_target_x, 0);
+    atomic_store(&g_target_y, 0);
+    atomic_store(&g_target_index, 0);
 
     for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
     {
@@ -71,18 +82,22 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         int width, height;
         get_screen_size(&width, &height);
 
+        // Distance from middle of screen/crosshair
         float distance_to_ent = sqrt((width / 2 - ent2d.x) * (width / 2 - ent2d.x) + (height / 2 - ent2d.y) * (height / 2 - ent2d.y));
 
         if (distance_to_ent < smallest_distance)
-        {          
+        {
+            atomic_store(&g_target_x, (int)ent2d.x);
+            atomic_store(&g_target_y, (int)ent2d.y);
+            atomic_store(&g_target_index, ent_index);          
             smallest_distance = distance_to_ent;
             target_yaw_angle = yaw_angle;
             target_pitch_angle = pitch_angle;
-            target_index = ent_index;
+            target_ent_index = ent_index;
         }
     }
 
-    if (target_index != 0)
+    if ((user_cmd->buttons & 1) != 0 && target_ent_index != 0)
     {
         user_cmd->viewangles.x = -target_pitch_angle;
         user_cmd->viewangles.y = target_yaw_angle;
