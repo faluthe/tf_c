@@ -33,5 +33,5 @@ float get_global_vars_curtime()
 
 float get_global_vars_interval_per_tick()
 {
-    return global_vars->absoluteframetime + global_vars->frametime + global_vars->interval_per_tick;
+    return global_vars->interval_per_tick;
 }
