@@ -20,6 +20,11 @@ __int32_t get_ent_team(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0xDC);
 }
 
+__int32_t get_ent_class(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x1BA0);
+}
+
 struct vec3_t get_ent_origin(void *entity)
 {
     // x + 0x340, y + 0x344, z + 0x348
@@ -74,4 +79,9 @@ bool is_ent_dormant(void *entity)
 bool get_ent_lifestate(void *entity)
 {
     return *(__int8_t *)((__uint64_t)(entity) + 0x746);
+}
+
+__int32_t get_active_weapon(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x11D0) & 0xFFF;
 }
