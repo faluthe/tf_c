@@ -25,6 +25,8 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
         esp_font = text_create_font();
         text_set_font_glyph_set(esp_font, "Tahoma", 15, 200, 0, 0, 0x210);
 
+        init_render_queue();
+
         hooked = true;
     }
 
@@ -49,4 +51,5 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     draw_print_text(interval_per_tick_str, wcslen(interval_per_tick_str));
 
     draw_player_esp();
+    draw_render_queue();
 }

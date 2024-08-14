@@ -24,13 +24,6 @@ void draw_player_esp()
         return;
     }
 
-    int target_x = atomic_load(&g_target_x);
-    int target_y = atomic_load(&g_target_y);
-    int target_index = atomic_load(&g_target_index);
-
-    draw_set_color(255, 0, 0, 255);
-    draw_filled_rect(target_x - 5, target_y - 5, target_x + 5, target_y + 5);
-
     for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
     {
         void *entity = get_client_entity(ent_index);
@@ -45,15 +38,7 @@ void draw_player_esp()
             continue;
         }
 
-
-        if (ent_index == target_index)
-        {
-            draw_set_color(0, 255, 0, 255);
-        }
-        else
-        {
-            draw_set_color(0, 0, 255, 255);
-        }
+        draw_set_color(0, 0, 255, 255);
 
         struct vec3_t ent_eye_pos = get_bone_pos(entity, 6);
         struct vec3_t ent_eye_2d;

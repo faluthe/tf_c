@@ -1,4 +1,5 @@
 #include "hooks/hooks.h"
+#include "hooks/paint_traverse/paint_traverse.h"
 #include "interfaces/interfaces.h"
 #include "utils/utils.h"
 
@@ -8,6 +9,7 @@
 __attribute__((destructor)) void unload()
 {
     restore_hooks();
+    destroy_render_queue();
     log_msg("tf_c unloaded\n");
     close_log();
 }
