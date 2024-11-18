@@ -49,5 +49,5 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         user_cmd->buttons &= ~2;
     }
 
-    return rc;
+    return false;
 }
