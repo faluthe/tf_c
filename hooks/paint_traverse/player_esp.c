@@ -38,19 +38,6 @@ void draw_player_esp()
             continue;
         }
 
-        draw_set_color(0, 0, 255, 255);
-
-        struct vec3_t ent_eye_pos = get_bone_pos(entity, 6);
-        struct vec3_t ent_eye_2d;
-
-        if (screen_position(&ent_eye_pos, &ent_eye_2d) != 0)
-        {
-            continue;
-        }
-
-        float box_width = 10.0f;
-        draw_filled_rect(ent_eye_2d.x - box_width, ent_eye_2d.y - box_width, ent_eye_2d.x + box_width, ent_eye_2d.y + box_width);
-
         struct vec3_t ent_origin_pos = get_ent_origin(entity);
         struct vec3_t *ent_mins = get_collideable_mins(entity);
         struct vec3_t *ent_maxs = get_collideable_maxs(entity);
@@ -101,7 +88,12 @@ void draw_player_esp()
         }
 
         float height = top - bottom;
+        left += height / 10;
+        bottom += height / 10;
+        right -= height / 10;
         draw_set_color(255, 255, 255, 255);
-        draw_filled_rect(left + (height / 10), bottom + (height / 10), right - (height / 10), top);
+        draw_filled_rect(left, bottom, right, top);
+        draw_set_color(0, 255, 0, 255);
+        draw_filled_rect(left - 3, bottom, left - 2, top);
     }
 }
