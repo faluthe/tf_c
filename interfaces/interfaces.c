@@ -30,12 +30,12 @@ static const char *surface_version = "VGUI_Surface030";
 static const char *vgui_panel_version = "VGUI_Panel009";
 
 // Arch consts
-static const char arch_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
-static const char arch_bin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
+// static const char arch_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
+// static const char arch_bin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
 
 // Debian consts
-// static const char ubuntu_tfbin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/tf/bin/linux64/";
-// static const char ubuntu_bin_path[256] = "/home/pat/.steam/debian-installation/steamapps/common/Team Fortress 2/bin/linux64/";
+static const char ubuntu_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
+static const char ubuntu_bin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
 
 CreateInterfaceFn get_factory(const char base_path[256], char *lib_name)
 {
@@ -88,10 +88,10 @@ void *get_interface(CreateInterfaceFn factory, const char *version)
 
 bool init_interfaces()
 {
-    CreateInterfaceFn client_factory = get_factory(arch_tfbin_path, "client.so");
-    CreateInterfaceFn engine_factory = get_factory(arch_bin_path, "engine.so");
-    CreateInterfaceFn surface_factory = get_factory(arch_bin_path, "vguimatsurface.so");
-    CreateInterfaceFn vgui_factory = get_factory(arch_bin_path, "vgui2.so");
+    CreateInterfaceFn client_factory = get_factory(ubuntu_tfbin_path, "client.so");
+    CreateInterfaceFn engine_factory = get_factory(ubuntu_bin_path, "engine.so");
+    CreateInterfaceFn surface_factory = get_factory(ubuntu_bin_path, "vguimatsurface.so");
+    CreateInterfaceFn vgui_factory = get_factory(ubuntu_bin_path, "vgui2.so");
 
     if (!client_factory || !engine_factory || !surface_factory || !vgui_factory)
     {

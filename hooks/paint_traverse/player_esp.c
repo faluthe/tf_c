@@ -50,5 +50,58 @@ void draw_player_esp()
 
         float box_width = 10.0f;
         draw_filled_rect(ent_eye_2d.x - box_width, ent_eye_2d.y - box_width, ent_eye_2d.x + box_width, ent_eye_2d.y + box_width);
+
+        struct vec3_t ent_origin_pos = get_ent_origin(entity);
+        struct vec3_t *ent_mins = get_collideable_mins(entity);
+        struct vec3_t *ent_maxs = get_collideable_maxs(entity);
+
+        struct vec3_t frt = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_maxs->z };
+        struct vec3_t blb = { ent_origin_pos.x + ent_mins->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_mins->z };
+        struct vec3_t brt = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_maxs->z };
+        struct vec3_t flb = { ent_origin_pos.x + ent_mins->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_mins->z };
+        struct vec3_t brb = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_mins->z };
+        struct vec3_t flt = { ent_origin_pos.x + ent_mins->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_maxs->z };
+        struct vec3_t blt = { ent_origin_pos.x + ent_mins->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_maxs->z };
+        struct vec3_t frb = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_mins->z };
+
+        struct vec3_t frt_2d, blb_2d, brt_2d, flb_2d, brb_2d, flt_2d, blt_2d, frb_2d;
+
+        if (screen_position(&frt, &frt_2d) != 0 || screen_position(&blb, &blb_2d) != 0 || screen_position(&brt, &brt_2d) != 0 || screen_position(&flb, &flb_2d) != 0 || screen_position(&brb, &brb_2d) != 0 || screen_position(&flt, &flt_2d) != 0 || screen_position(&blt, &blt_2d) != 0 || screen_position(&frb, &frb_2d) != 0)
+        {
+            continue;
+        }
+
+        struct vec3_t *points[] = { &frt_2d, &blb_2d, &brt_2d, &flb_2d, &brb_2d, &flt_2d, &blt_2d, &frb_2d };
+        float left = points[0]->x;
+        float top = points[0]->y;
+        float right = points[0]->x;
+        float bottom = points[0]->y;
+
+        for (int i = 1; i < 8; i++)
+        {
+            if (left > points[i]->x)
+            {
+                left = points[i]->x;
+            }
+
+            if (top < points[i]->y)
+            {
+                top = points[i]->y;
+            }
+
+            if (right < points[i]->x)
+            {
+                right = points[i]->x;
+            }
+
+            if (bottom > points[i]->y)
+            {
+                bottom = points[i]->y;
+            }
+        }
+
+        float height = top - bottom;
+        draw_set_color(255, 255, 255, 255);
+        draw_filled_rect(left + (height / 10), bottom + (height / 10), right - (height / 10), top);
     }
 }
