@@ -110,3 +110,8 @@ struct vec3_t *get_collideable_maxs(void *entity)
 
     return func(collideable);
 }
+
+int get_tick_base(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x1718);
+}

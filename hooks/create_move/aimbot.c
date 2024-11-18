@@ -5,6 +5,7 @@
 #include "../../source_sdk/entity_list/entity_list.h"
 #include "../../source_sdk/global_vars/global_vars.h"
 #include "../../source_sdk/math/vec3.h"
+#include "../../source_sdk/net_channel_info/net_channel_info.h"
 #include "../../source_sdk/user_cmd.h"
 #include "../../utils/math/math_utils.h"
 #include "../../utils/utils.h"
@@ -82,6 +83,27 @@ float get_predicted_time(void *entity, struct vec3_t ent_distance, int rocket_sp
         int c = -1 * ( (ent_distance.x * ent_distance.x) + (ent_distance.y * ent_distance.y) + (ent_distance.z * ent_distance.z) );
         return positive_quadratic_root((float)a, (float)b, (float)c);
 
+    }
+}
+
+bool can_attack(void *active_weapon, void *localplayer)
+{
+    if (active_weapon == NULL)
+    {
+        return false;
+    }
+
+    float next_attack = get_next_attack(active_weapon);
+    int tick_base = get_tick_base(localplayer);
+    log_msg("Tick base: %d\n", tick_base);
+    float curtime = tick_base * get_global_vars_interval_per_tick();
+
+    if (next_attack <= curtime)
+    {
+        return true;
+    } else
+    {
+        return false;
     }
 }
 
@@ -210,6 +232,26 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         }
         else
         {
+            void *netchannel_info = get_net_channel_info();
+            if (netchannel_info == NULL)
+            {
+                return;
+            }
+
+            float latency = get_latency(netchannel_info, 0) + get_latency(netchannel_info, 1);
+
+            log_msg("Latency: %f\n", latency);
+
+            if (can_attack(active_weapon, localplayer))
+            {
+                log_msg("Can attack\n");
+            } else
+            {
+                log_msg("Cannot attack\n");
+                user_cmd->buttons &= ~1;
+                return;
+            }
+            
             user_cmd->viewangles = target_view_angle;
         }
     }

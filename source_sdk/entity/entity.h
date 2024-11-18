@@ -17,6 +17,7 @@ bool get_ent_lifestate(void *entity);
 __int32_t get_active_weapon(void *entity);
 struct vec3_t* get_collideable_mins(void *entity);
 struct vec3_t* get_collideable_maxs(void *entity);
+int get_tick_base(void *entity);
 
 enum
 {
