@@ -10,38 +10,13 @@
 #include <stdatomic.h>
 #include <stddef.h>
 
-void draw_player_esp()
+void draw_2d_box(void *entity, bool draw_box, bool draw_health_bar)
 {
-    if (!is_in_game())
-    {
-        return;
-    }
-
-    void *localplayer = get_localplayer();
-
-    if (localplayer == NULL)
-    {
-        return;
-    }
-
-    for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
-    {
-        void *entity = get_client_entity(ent_index);
-
-        if (entity == NULL || entity == localplayer)
-        {
-            continue;
-        }
-
-        if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer))
-        {
-            continue;
-        }
-
-        struct vec3_t ent_origin_pos = get_ent_origin(entity);
+    struct vec3_t ent_origin_pos = get_ent_origin(entity);
         struct vec3_t *ent_mins = get_collideable_mins(entity);
         struct vec3_t *ent_maxs = get_collideable_maxs(entity);
 
+        // Bounding box points
         struct vec3_t frt = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_maxs->z };
         struct vec3_t blb = { ent_origin_pos.x + ent_mins->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_mins->z };
         struct vec3_t brt = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_mins->y, ent_origin_pos.z + ent_maxs->z };
@@ -52,12 +27,12 @@ void draw_player_esp()
         struct vec3_t frb = { ent_origin_pos.x + ent_maxs->x, ent_origin_pos.y + ent_maxs->y, ent_origin_pos.z + ent_mins->z };
 
         struct vec3_t frt_2d, blb_2d, brt_2d, flb_2d, brb_2d, flt_2d, blt_2d, frb_2d;
-
         if (screen_position(&frt, &frt_2d) != 0 || screen_position(&blb, &blb_2d) != 0 || screen_position(&brt, &brt_2d) != 0 || screen_position(&flb, &flb_2d) != 0 || screen_position(&brb, &brb_2d) != 0 || screen_position(&flt, &flt_2d) != 0 || screen_position(&blt, &blt_2d) != 0 || screen_position(&frb, &frb_2d) != 0)
         {
-            continue;
+            return;
         }
 
+        // Get best 2d bounding box
         struct vec3_t *points[] = { &frt_2d, &blb_2d, &brt_2d, &flb_2d, &brb_2d, &flt_2d, &blt_2d, &frb_2d };
         float left = points[0]->x;
         float top = points[0]->y;
@@ -87,13 +62,56 @@ void draw_player_esp()
             }
         }
 
+        // Tighten bounding box
         float height = top - bottom;
         left += height / 10;
         bottom += height / 10;
         right -= height / 10;
-        draw_set_color(255, 255, 255, 255);
-        draw_filled_rect(left, bottom, right, top);
-        draw_set_color(0, 255, 0, 255);
-        draw_filled_rect(left - 3, bottom, left - 2, top);
+        
+        if (draw_box)
+        {
+            draw_set_color(255, 255, 255, 255);
+            draw_filled_rect(left, bottom, right, top);
+        }
+
+        if (draw_health_bar)
+        {
+            int health = get_ent_health(entity);
+            int max_health = get_ent_max_health(entity);
+            float bar_height = (float)height * ((float)health / (float)max_health);
+            draw_set_color(0, 255, 0, 255);
+            draw_filled_rect(left - 3, top - bar_height, left - 2, top);
+        }
+}
+
+void draw_player_esp()
+{
+    if (!is_in_game())
+    {
+        return;
+    }
+
+    void *localplayer = get_localplayer();
+
+    if (localplayer == NULL)
+    {
+        return;
+    }
+
+    for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
+    {
+        void *entity = get_client_entity(ent_index);
+
+        if (entity == NULL || entity == localplayer)
+        {
+            continue;
+        }
+
+        if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer))
+        {
+            continue;
+        }
+
+        draw_2d_box(entity, false, true);
     }
 }

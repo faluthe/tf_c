@@ -15,6 +15,11 @@ __int32_t get_ent_health(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0xD4);
 }
 
+__int32_t get_ent_max_health(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x1df8);
+}
+
 __int32_t get_ent_team(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0xDC);

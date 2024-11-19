@@ -5,6 +5,7 @@
 
 __int32_t get_ent_flags(void *entity);
 __int32_t get_ent_health(void *entity);
+__int32_t get_ent_max_health(void *entity);
 __int32_t get_ent_team(void *entity);
 __int32_t get_ent_class(void *entity);
 struct vec3_t get_ent_origin(void *entity);
