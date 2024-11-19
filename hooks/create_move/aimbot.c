@@ -192,18 +192,26 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
                 return;
             }
 
+            void *netchannel_info = get_net_channel_info();
+            if (netchannel_info == NULL)
+            {
+                return;
+            }
+            // float latency = get_latency(netchannel_info, 0) + get_latency(netchannel_info, 1);
+            float latency = 1.0f;
             struct vec3_t target_ent_velocity = get_ent_velocity(target_ent);
-            float ipt = 7.0f * get_global_vars_interval_per_tick();
-            target_ent_pos.x += (target_ent_velocity.x * predicted_time) + (target_ent_velocity.x * ipt);
-            target_ent_pos.y += (target_ent_velocity.y * predicted_time) + (target_ent_velocity.y * ipt);
+            target_ent_velocity.x *= latency;
+            target_ent_velocity.y *= latency;
+            target_ent_velocity.z *= latency;
+            target_ent_pos.x += (target_ent_velocity.x * predicted_time);
+            target_ent_pos.y += (target_ent_velocity.y * predicted_time);
             if ((get_ent_flags(target_ent) & 1) == 0)
             {
                 target_ent_pos.z += (target_ent_velocity.z * predicted_time) - (0.25f * 800 * (predicted_time * predicted_time));
-                target_ent_pos.z += (target_ent_velocity.z * ipt) - (0.25f * 800 * (ipt * ipt)); 
             }
             else
             {
-                target_ent_pos.z += (target_ent_velocity.z * predicted_time) + (target_ent_velocity.z * ipt);
+                target_ent_pos.z += (target_ent_velocity.z * predicted_time);
             }
 
             struct vec3_t ent_distance = get_distance(target_ent_pos, local_pos);
@@ -232,16 +240,6 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         }
         else
         {
-            void *netchannel_info = get_net_channel_info();
-            if (netchannel_info == NULL)
-            {
-                return;
-            }
-
-            float latency = get_latency(netchannel_info, 0) + get_latency(netchannel_info, 1);
-
-            log_msg("Latency: %f\n", latency);
-
             if (can_attack(active_weapon, localplayer))
             {
                 log_msg("Can attack\n");
