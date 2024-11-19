@@ -1,0 +1,1 @@
+float get_latency(void *net_channel_info, int flow);

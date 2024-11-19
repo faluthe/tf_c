@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 __int32_t get_weapon_id(void *weapon_entity);
+float get_next_attack(void *weapon_entity);
 
 enum
 {

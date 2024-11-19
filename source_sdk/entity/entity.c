@@ -15,6 +15,11 @@ __int32_t get_ent_health(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0xD4);
 }
 
+__int32_t get_ent_max_health(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x1df8);
+}
+
 __int32_t get_ent_team(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0xDC);
@@ -84,4 +89,34 @@ bool get_ent_lifestate(void *entity)
 __int32_t get_active_weapon(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0x11D0) & 0xFFF;
+}
+
+void *get_collideable(void *entity)
+{
+    return (void *)((__uint64_t)(entity) + 0x240);
+}
+
+struct vec3_t *get_collideable_mins(void *entity)
+{
+    void *collideable = get_collideable(entity);
+    void **vtable = *(void ***)collideable;
+
+    struct vec3_t *(*func)(void *) = vtable[1];
+
+    return func(collideable);
+}
+
+struct vec3_t *get_collideable_maxs(void *entity)
+{
+    void *collideable = get_collideable(entity);
+    void **vtable = *(void ***)collideable;
+
+    struct vec3_t *(*func)(void *) = vtable[2];
+
+    return func(collideable);
+}
+
+int get_tick_base(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x1718);
 }

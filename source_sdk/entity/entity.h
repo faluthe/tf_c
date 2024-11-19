@@ -5,6 +5,7 @@
 
 __int32_t get_ent_flags(void *entity);
 __int32_t get_ent_health(void *entity);
+__int32_t get_ent_max_health(void *entity);
 __int32_t get_ent_team(void *entity);
 __int32_t get_ent_class(void *entity);
 struct vec3_t get_ent_origin(void *entity);
@@ -15,6 +16,9 @@ struct vec3_t get_bone_pos(void *entity, int bone_num);
 bool is_ent_dormant(void *entity);
 bool get_ent_lifestate(void *entity);
 __int32_t get_active_weapon(void *entity);
+struct vec3_t* get_collideable_mins(void *entity);
+struct vec3_t* get_collideable_maxs(void *entity);
+int get_tick_base(void *entity);
 
 enum
 {

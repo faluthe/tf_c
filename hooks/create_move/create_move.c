@@ -10,6 +10,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+static bool silent_aim = true;
+
 // extern
 __int64_t (*create_move_original)(void *, float, void *) = NULL;
 
@@ -49,5 +51,11 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         user_cmd->buttons &= ~2;
     }
 
-    return rc;
+    if (silent_aim)
+    {
+        return false;
+    } else
+    {
+        return rc;
+    }
 }

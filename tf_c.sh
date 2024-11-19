@@ -56,5 +56,5 @@ else
     echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
 
     tail -f ./tf_c.log
-    rm tf_c.log
+    # rm tf_c.log
 fi
