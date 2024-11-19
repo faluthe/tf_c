@@ -68,6 +68,7 @@ void draw_2d_box(void *entity, bool draw_box, bool draw_health_bar)
         left += height / 10;
         bottom += height / 10;
         right -= height / 10;
+        height = top - bottom;
         
         if (draw_box)
         {
@@ -81,10 +82,10 @@ void draw_2d_box(void *entity, bool draw_box, bool draw_health_bar)
             int max_health = get_ent_max_health(entity);
             float bar_height = (float)height * ((float)health / (float)max_health);
             draw_set_color(0, 255, 0, 255);
-            draw_filled_rect(left - 3, top - bar_height, left - 2, top);
+            draw_filled_rect(right + 2, top - bar_height, right + 3, top);
         }
 
-        draw_bbox_decorators(right, top, entity);
+        draw_bbox_decorators(right + 20, bottom, entity);
 }
 
 void draw_player_esp()

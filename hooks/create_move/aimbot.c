@@ -94,9 +94,7 @@ bool can_attack(void *active_weapon, void *localplayer)
     }
 
     float next_attack = get_next_attack(active_weapon);
-    int tick_base = get_tick_base(localplayer);
-    log_msg("Tick base: %d\n", tick_base);
-    float curtime = tick_base * get_global_vars_interval_per_tick();
+    float curtime = get_tick_base(localplayer) * get_global_vars_interval_per_tick();
 
     if (next_attack <= curtime)
     {
@@ -156,20 +154,36 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
     }
 
     void *target_ent = get_client_entity(target_ent_index);
-    if (target_ent == NULL)
+    static struct vec3_t predicted_rocket_pos = {0, 0, 0};
+    static float predicted_rocket_time = 0.0f;
+    const float rocket_esp_linger = 0.5f;
+    if (target_ent != NULL)
+    {
+        add_bbox_decorator(L"TARGET", (struct vec3_t){200, 75, 75}, target_ent);
+        if (predicted_rocket_pos.x != 0 && predicted_rocket_pos.y != 0 && predicted_rocket_pos.z != 0)
+        {
+            struct vec3_t rocket_predicted_screen;
+            if (screen_position(&predicted_rocket_pos, &rocket_predicted_screen) == 0)
+            {
+                float curtime = get_global_vars_curtime();
+                float time_diff = predicted_rocket_time - curtime;
+                add_to_render_queue(L"rocket", (int)rocket_predicted_screen.x, (int)rocket_predicted_screen.y, (struct vec3_t){75, 169, 200}, time_diff > 0.0f ? time_diff : 0.0f);
+                if (curtime > predicted_rocket_time + rocket_esp_linger)
+                {
+                    predicted_rocket_pos = (struct vec3_t){0, 0, 0};
+                }
+            }
+        }
+    }
+
+    void *active_weapon = get_client_entity(get_active_weapon(localplayer));
+    if (active_weapon == NULL)
     {
         return;
     }
 
-    add_bbox_decorator(L"TARGET", (struct vec3_t){255, 0, 0}, target_ent);
-
-    if ((user_cmd->buttons & 1) != 0 && target_ent_index != 0)
+    if ((user_cmd->buttons & 1) != 0 && target_ent_index != 0 && target_ent && can_attack(active_weapon, localplayer))
     {
-        void *active_weapon = get_client_entity(get_active_weapon(localplayer));
-        if (active_weapon == NULL)
-        {
-            return;
-        }
         int weapon_id = get_weapon_id(active_weapon);
 
         // Projectile prediction
@@ -232,23 +246,12 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
             {
                 return;
             }
-
-            add_to_render_queue(L"ROCKET HERE", (int)ent2d.x, (int)ent2d.y);
-
+            predicted_rocket_pos = target_ent_pos;
+            predicted_rocket_time = get_global_vars_curtime() + predicted_time;
             user_cmd->viewangles = new_view_angle;
         }
         else
         {
-            if (can_attack(active_weapon, localplayer))
-            {
-                log_msg("Can attack\n");
-            } else
-            {
-                log_msg("Cannot attack\n");
-                user_cmd->buttons &= ~1;
-                return;
-            }
-            
             user_cmd->viewangles = target_view_angle;
         }
     }

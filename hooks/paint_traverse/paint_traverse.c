@@ -50,6 +50,14 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     draw_set_text_pos(50, 90);
     draw_print_text(interval_per_tick_str, wcslen(interval_per_tick_str));
 
+    float curtime = get_global_vars_curtime();
+    wchar_t curtime_str[64];
+    draw_set_text_pos(50, 110);
+    draw_print_text(L"curtime: ", 9);
+    swprintf(curtime_str, 64, L"%.5f", curtime);
+    draw_set_text_pos(50, 130);
+    draw_print_text(curtime_str, wcslen(curtime_str));
+
     draw_player_esp();
     draw_render_queue();
 }
