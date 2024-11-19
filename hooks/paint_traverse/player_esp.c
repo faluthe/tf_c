@@ -5,6 +5,7 @@
 #include "../../source_sdk/math/vec3.h"
 #include "../../source_sdk/surface/surface.h"
 #include "../../utils/utils.h"
+#include "paint_traverse.h"
 
 #include "../hooks.h"
 #include <stdatomic.h>
@@ -82,6 +83,8 @@ void draw_2d_box(void *entity, bool draw_box, bool draw_health_bar)
             draw_set_color(0, 255, 0, 255);
             draw_filled_rect(left - 3, top - bar_height, left - 2, top);
         }
+
+        draw_bbox_decorators(right, top, entity);
 }
 
 void draw_player_esp()

@@ -155,13 +155,13 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         }
     }
 
-    struct vec3_t ent2d;
-    if (screen_position(&target_ent_pos, &ent2d) != 0)
+    void *target_ent = get_client_entity(target_ent_index);
+    if (target_ent == NULL)
     {
         return;
     }
 
-    add_to_render_queue(L"TARGET", (int)ent2d.x, (int)ent2d.y);
+    add_bbox_decorator(L"TARGET", (struct vec3_t){255, 0, 0}, target_ent);
 
     if ((user_cmd->buttons & 1) != 0 && target_ent_index != 0)
     {
@@ -175,7 +175,6 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         // Projectile prediction
         if (get_ent_class(localplayer) == TF_CLASS_SOLDIER && (weapon_id == TF_WEAPON_ROCKETLAUNCHER || weapon_id == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT))
         {
-            void *target_ent = get_client_entity(target_ent_index);
             struct vec3_t target_ent_origin = get_ent_origin(target_ent);
             struct vec3_t local_pos = get_ent_eye_pos(localplayer);
             if (target_ent_origin.z < local_pos.z)
