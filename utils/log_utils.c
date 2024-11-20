@@ -10,12 +10,12 @@ void log_msg(const char *format, ...)
     // TBD: Ensure this path exists
     if (log_file == NULL)
     {
-        log_file = fopen("/home/pat/vs/tf_c/tf_c.log", "w");
+        log_file = fopen("/tmp/tf_c.log", "w"); //global logging location
     }
 
     va_list args;
     va_start(args, format);
-
+    
     vfprintf(log_file, format, args);
     fflush(log_file);
 
