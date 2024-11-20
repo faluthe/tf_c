@@ -1,3 +1,9 @@
-.vscode
+# tf_c bin/log files
 tf_c.log
 tf_c.so
+
+# vscode project file
+.vscode
+
+# Emacs tilde files
+*~
