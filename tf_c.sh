@@ -71,4 +71,5 @@ else
     
     tail -f /tmp/tf_c.log
     # rm tf_c.log
+    # log file should get automatically cleaned up on power off or boot
 fi
