@@ -29,32 +29,23 @@ static const char *entity_list_version = "VClientEntityList003";
 static const char *surface_version = "VGUI_Surface030";
 static const char *vgui_panel_version = "VGUI_Panel009";
 
-/// This is a "bad" way to get the dl paths. Since the dynamic library has all the context of the tf2 executable file,
-/// we can just do the paths with in relativity to the executable file, which is much more agnostic to the operating system.
+static const char *tfbin_path = "./tf/bin/linux64/";
+static const char *bin_path = "./bin/linux64/";
 
-// Arch consts
-// static const char arch_tfbin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
-// static const char arch_bin_path[256] = "/home/pat/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
-
-// Debian consts
-// static const char ubuntu_tfbin_paths[256] = "/home/drcoomer/.local/share/Steam/steamapps/common/Team Fortress 2/tf/bin/linux64/";
-// static const char ubuntu_bin_path[256] = "/home/drcoomer/.local/share/Steam/steamapps/common/Team Fortress 2/bin/linux64/";
-
-// how I'd like to implement file paths
-#define tfbin_path "./tf/bin/linux64/"
-#define bin_path   "./bin/linux64/"
-
-CreateInterfaceFn get_factory(char *lib_name_and_relative_path) //could use a better variable name
+CreateInterfaceFn get_factory(const char *base_path, char *lib_name)
 {
+    char lib_path[256];
+    strcpy(lib_path, base_path);
+    strcat(lib_path, lib_name);
 
-    void *lib_handle = dlopen(lib_name_and_relative_path, RTLD_NOLOAD | RTLD_NOW);
+    void *lib_handle = dlopen(lib_path, RTLD_NOLOAD | RTLD_NOW);
     if (!lib_handle)
     {
-        log_msg("Failed to load %s\n", lib_name_and_relative_path);
+        log_msg("Failed to load %s\n", lib_path);
         return NULL;
     }
 
-    log_msg("%s loaded at %p\n", lib_name_and_relative_path, lib_handle);
+    log_msg("%s loaded at %p\n", lib_path, lib_handle);
 
     CreateInterfaceFn create_interface = dlsym(lib_handle, "CreateInterface");
     if (!create_interface)
@@ -63,7 +54,7 @@ CreateInterfaceFn get_factory(char *lib_name_and_relative_path) //could use a be
         return NULL;
     }
 
-    log_msg("%s factory found at %p\n", lib_name_and_relative_path, create_interface);
+    log_msg("%s factory found at %p\n", lib_path, create_interface);
 
     return create_interface;
 }
@@ -86,10 +77,10 @@ void *get_interface(CreateInterfaceFn factory, const char *version)
 bool init_interfaces()
 {
     //A neat thing with C is that string constants will be concatenated at compile time 
-    CreateInterfaceFn client_factory = get_factory(tfbin_path "client.so");
-    CreateInterfaceFn engine_factory = get_factory(bin_path "engine.so");
-    CreateInterfaceFn surface_factory = get_factory(bin_path "vguimatsurface.so");
-    CreateInterfaceFn vgui_factory = get_factory(bin_path "vgui2.so");
+    CreateInterfaceFn client_factory = get_factory(tfbin_path, "client.so");
+    CreateInterfaceFn engine_factory = get_factory(bin_path, "engine.so");
+    CreateInterfaceFn surface_factory = get_factory(bin_path, "vguimatsurface.so");
+    CreateInterfaceFn vgui_factory = get_factory(bin_path, "vgui2.so");
 
     if (!client_factory || !engine_factory || !surface_factory || !vgui_factory)
     {

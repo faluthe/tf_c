@@ -12,7 +12,7 @@ PROCID=$(pgrep tf_linux64 | head -n 1)
 
 if [ "$DEBUG" = true ] || [ "$COMPILE" = true ]; then
     echo "Compiling shared library with $(find . -name '*.c')"
-    gcc $(find . -name '*.c') -shared -fpic -g -o tf_c.so -Wall #I would suggest switching to Makefile, over this.
+    gcc $(find . -name '*.c') -shared -fpic -g -o tf_c.so -Wall
     if [ $? -ne 0 ]; then
 	echo "Failed to build"
 	exit 1
@@ -48,16 +48,6 @@ else
 
     trap unload SIGINT
 
-    #check if log file exists
-    ls /tmp/tf_c.log > /dev/null
-    if [ $? -ne 0 ]; then
-	sudo --user=#1000 touch /tmp/tf_c.log #creates the log file as a user
-	if [ $? -ne 0 ]; then
-	    echo "Could not create log file"
-	    exit 1
-	fi
-    fi
-
     LIB_HANDLE=$(sudo gdb -n --batch -ex "attach $PROCID" \
                             -ex "call ((void * (*) (const char*, int)) dlopen)(\"$LIB_PATH\", 1)" \
                             -ex "detach" 2> /dev/null | grep -oP '\$1 = \(void \*\) \K0x[0-9a-f]+')
@@ -70,6 +60,5 @@ else
     echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
     
     tail -f /tmp/tf_c.log
-    # rm tf_c.log
     # log file should get automatically cleaned up on power off or boot
 fi

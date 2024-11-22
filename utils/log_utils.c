@@ -7,10 +7,9 @@ FILE *log_file = NULL;
 
 void log_msg(const char *format, ...)
 {
-    // TBD: Ensure this path exists
     if (log_file == NULL)
     {
-        log_file = fopen("/tmp/tf_c.log", "w"); //global logging location
+        log_file = fopen("/tmp/tf_c.log", "w");
     }
 
     va_list args;
