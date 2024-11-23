@@ -32,9 +32,9 @@ __int32_t get_ent_class(void *entity)
 
 struct vec3_t get_ent_origin(void *entity)
 {
-    // x + 0x340, y + 0x344, z + 0x348
-    return *(struct vec3_t *)((__uint64_t)(entity) + 0x340);
-}
+    // x + 0x328, y + 0x332, z + 0x346
+    return *(struct vec3_t *)((__uint64_t)(entity) + 0x328); //PR comment: This is the correct offset. The one which was used prior is used for world origin.
+}                                                            //The world origin is actually ahead of where the genuine origin is, causing issues with the aimbot and ESP to accur, like shooting ahead of where they are moving.
 
 struct vec3_t get_ent_eye_pos(void *entity)
 {
@@ -42,6 +42,11 @@ struct vec3_t get_ent_eye_pos(void *entity)
     float eye_z_diff = *(float *)((__uint64_t)(entity) + 0x14C);
 
     return (struct vec3_t){origin.x, origin.y, origin.z + eye_z_diff};
+}
+
+struct vec3_t get_ent_angles(void *entity)
+{
+  return *(struct vec3_t *)((__uint64_t)(entity) + 0x334);
 }
 
 struct vec3_t get_ent_velocity(void *entity)
