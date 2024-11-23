@@ -13,6 +13,10 @@ PROCID=$(pgrep tf_linux64 | head -n 1)
 if [ "$DEBUG" = true ] || [ "$COMPILE" = true ]; then
     echo "Compiling shared library with $(find . -name '*.c')"
     gcc $(find . -name '*.c') -shared -fpic -g -o tf_c.so -Wall
+    if [ $? -ne 0 ]; then
+	echo "Failed to build"
+	exit 1
+    fi
 fi
 
 echo -e "Library Path: $LIB_PATH\nProcess ID: $PROCID"
@@ -54,7 +58,7 @@ else
     fi
 
     echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
-
-    tail -f ./tf_c.log
-    # rm tf_c.log
+    
+    tail -f /tmp/tf_c.log
+    # log file should get automatically cleaned up on power off or boot
 fi
