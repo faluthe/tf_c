@@ -32,7 +32,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     }
 
     void *localplayer = get_localplayer();
-
+    
     if (!localplayer)
     {
         log_msg("localplayer is NULL\n");
