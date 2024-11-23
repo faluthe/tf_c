@@ -142,10 +142,11 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
             .y = yaw_angle,
             .z = 0
         };
-	
+
+	//PR Comment: This isn't true FOV. But, using this value instead of getting the difference between yaws has removed all of the edge cases in my usage. 
         float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - new_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - new_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
 	
-        if (fov_distance < smallest_fov_angle)
+        if (fov_distance <= 4*90 && fov_distance < smallest_fov_angle)
         {
             smallest_fov_angle = fov_distance;
             target_ent_index = ent_index;
