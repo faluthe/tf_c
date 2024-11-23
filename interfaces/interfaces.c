@@ -76,7 +76,6 @@ void *get_interface(CreateInterfaceFn factory, const char *version)
 
 bool init_interfaces()
 {
-    //A neat thing with C is that string constants will be concatenated at compile time 
     CreateInterfaceFn client_factory = get_factory(tfbin_path, "client.so");
     CreateInterfaceFn engine_factory = get_factory(bin_path, "engine.so");
     CreateInterfaceFn surface_factory = get_factory(bin_path, "vguimatsurface.so");
