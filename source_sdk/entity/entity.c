@@ -1,9 +1,13 @@
-#include "../math/vec3.h"
 #include "../../utils/utils.h"
+#include "../entity_list/entity_list.h"
+#include "../global_vars/global_vars.h"
+#include "../math/vec3.h"
+#include "weapon_entity.h"
 
 #include "entity.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
 __int32_t get_ent_flags(void *entity)
 {
@@ -124,4 +128,54 @@ struct vec3_t *get_collideable_maxs(void *entity)
 int get_tick_base(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0x1718);
+}
+
+bool can_attack(void *localplayer)
+{
+    void *active_weapon = get_client_entity(get_active_weapon(localplayer));
+
+    if (active_weapon == NULL)
+    {
+        return false;
+    }
+
+    float next_attack = get_next_attack(active_weapon);
+    float curtime = get_tick_base(localplayer) * get_global_vars_interval_per_tick();
+
+    if (next_attack > curtime)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+// Use localplayer's class to determine whether to baim, then use ent's class to determine head/torso bone id (different per class)
+int get_best_aim_bone(void *localplayer, void *entity)
+{
+    bool baim = (get_ent_class(localplayer) != TF_CLASS_SNIPER || get_ent_health(entity) <= 50);
+
+    if (baim)
+    {
+        return 1;
+    }
+
+    __int32_t ent_class = get_ent_class(entity);
+
+    if (ent_class == TF_CLASS_DEMOMAN)
+    {
+        return 16;
+    }
+    else if (ent_class == TF_CLASS_ENGINEER)
+    {
+        return 8;
+    }
+    else if (ent_class == TF_CLASS_SNIPER || ent_class == TF_CLASS_SOLDIER)
+    {
+        return 5;
+    }
+    else
+    {
+        return 6;
+    }
 }

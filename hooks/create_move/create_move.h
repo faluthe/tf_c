@@ -4,4 +4,4 @@
 
 __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_cmd);
 extern __int64_t (*create_move_original)(void *, float, void *);
-void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd);
+void aimbot(void *localplayer, struct user_cmd *user_cmd);
