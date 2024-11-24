@@ -139,6 +139,11 @@ bool can_attack(void *localplayer)
         return false;
     }
 
+    if (get_ent_class(localplayer) == TF_CLASS_HEAVYWEAPONS)
+    {
+        return true;
+    }
+
     float next_attack = get_next_attack(active_weapon);
     float curtime = get_tick_base(localplayer) * get_global_vars_interval_per_tick();
 

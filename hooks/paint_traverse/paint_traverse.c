@@ -42,14 +42,6 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     draw_set_text_pos(50, 50);
     draw_print_text(L"tf_c", 4);
 
-    float interval_per_tick = get_global_vars_interval_per_tick();
-    wchar_t interval_per_tick_str[64];
-    draw_set_text_pos(50, 70);
-    draw_print_text(L"interval_per_tick: ", 19);
-    swprintf(interval_per_tick_str, 64, L"%.5f", interval_per_tick);
-    draw_set_text_pos(50, 90);
-    draw_print_text(interval_per_tick_str, wcslen(interval_per_tick_str));
-
     float curtime = get_global_vars_curtime();
     wchar_t curtime_str[64];
     draw_set_text_pos(50, 110);

@@ -116,6 +116,27 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     struct vec3_t projectile_target_pos;
     float smallest_fov_angle = __FLT_MAX__;
 
+    // Draw where a rocket was previously shot
+    static struct vec3_t esp_projectile_pos = {0.0f, 0.0f, 0.0f};
+    static float esp_predicted_time = 0.0f;
+    const float projectile_esp_linger = 0.5f;
+    if (esp_projectile_pos.x != 0.0f && esp_projectile_pos.y != 0.0f && esp_projectile_pos.z != 0.0f)
+    {
+        struct vec3_t projectile_predicted_screen;
+        if (screen_position(&esp_projectile_pos, &projectile_predicted_screen) == 0)
+        {
+            float curtime = get_global_vars_curtime();
+            float time_diff = esp_predicted_time - curtime;
+            struct vec3_t color = time_diff > 0.0f ? (struct vec3_t) {75, 169, 200} : (struct vec3_t) {255, 75, 75};
+            float data = time_diff > 0.0f ? time_diff : 0.0f;
+            add_to_render_queue(L"rocket", (int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, color, data);
+            if (curtime > esp_predicted_time + projectile_esp_linger)
+            {
+                esp_projectile_pos = (struct vec3_t){0.0f, 0.0f, 0.0f};
+            }
+        }
+    }
+
     for (int ent_index = 1; ent_index <= get_max_clients(); ent_index++)
     {
         void *entity = get_client_entity(ent_index);
@@ -163,7 +184,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             rocket_predicted_pos.z += (ent_velocity.z * predicted_time);
         }
 
-        // TBD: if pos !visible, aim at last known pos
+        // TBD: if pos !visible, aim at last known pos/different hitbox
         if (!is_pos_visible(localplayer, rocket_predicted_pos))
         {
             continue;
@@ -197,27 +218,6 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     if (screen_position(&projectile_target_pos, &target_screen) == 0)
     {
         add_to_render_queue(L"rocket", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){60, 5, 100}, 0.0f);
-    }
-
-    // Draw where a rocket was just shot
-    static struct vec3_t esp_projectile_pos = {0.0f, 0.0f, 0.0f};
-    static float esp_predicted_time = 0.0f;
-    const float projectile_esp_linger = 0.5f;
-    if (esp_projectile_pos.x != 0.0f && esp_projectile_pos.y != 0.0f && esp_projectile_pos.z != 0.0f)
-    {
-        struct vec3_t projectile_predicted_screen;
-        if (screen_position(&esp_projectile_pos, &projectile_predicted_screen) == 0)
-        {
-            float curtime = get_global_vars_curtime();
-            float time_diff = esp_predicted_time - curtime;
-            struct vec3_t color = time_diff > 0.0f ? (struct vec3_t) {75, 169, 200} : (struct vec3_t) {255, 75, 75};
-            float data = time_diff > 0.0f ? time_diff : 0.0f;
-            add_to_render_queue(L"rocket", (int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, color, data);
-            if (curtime > esp_predicted_time + projectile_esp_linger)
-            {
-                esp_projectile_pos = (struct vec3_t){0.0f, 0.0f, 0.0f};
-            }
-        }
     }
 
     if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))
