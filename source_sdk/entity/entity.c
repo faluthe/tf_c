@@ -33,9 +33,9 @@ __int32_t get_ent_class(void *entity)
 struct vec3_t get_ent_origin(void *entity)
 {
     // x + 0x328, y + 0x332, z + 0x346
-    return *(struct vec3_t *)((__uint64_t)(entity) + 0x328); //PR comment: This is the correct offset. The one which was used prior is used for world origin.
-}                                                            //The world origin is actually ahead of where the origin we want, causing ESP and aimbot to appear and shoot ahead of where we want.
-                                                             //Using this offset fixed those issues in my usage.
+    return *(struct vec3_t *)((__uint64_t)(entity) + 0x328);
+}                                                           
+
 struct vec3_t get_ent_eye_pos(void *entity)
 {
     struct vec3_t origin = get_ent_origin(entity);

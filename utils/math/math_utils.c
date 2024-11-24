@@ -2,8 +2,6 @@
 
 #include <math.h>
 
-// PR Comment: I think it would be more correct to call this function 'get_delta' or 'get_difference'
-// as this does not give us the distance between two points in 3D space, this is the difference of all 3 axes.
 struct vec3_t get_difference(struct vec3_t pos1, struct vec3_t pos2)
 {
     struct vec3_t difference;
