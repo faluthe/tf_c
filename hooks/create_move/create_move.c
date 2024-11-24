@@ -42,7 +42,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     if (user_cmd->tick_count > 1)
     {
         clear_render_queue();
-        aim_at_best_target(localplayer, user_cmd);
+        aimbot(localplayer, user_cmd);
     }
 
     // If player is not on ground unset jump button flag (breaks scout double jump)
