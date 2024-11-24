@@ -107,7 +107,7 @@ bool can_attack(void *active_weapon, void *localplayer)
 
 void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
 {
-    float smallest_angle = __FLT_MAX__;
+    float smallest_fov_angle = __FLT_MAX__;
     int target_ent_index = 0;
     struct vec3_t target_ent_pos;
     struct vec3_t target_view_angle;
@@ -128,25 +128,26 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
 
         struct vec3_t ent_pos = get_bone_pos(entity, get_best_bone(localplayer, entity));
         struct vec3_t local_pos = get_ent_eye_pos(localplayer);
-        struct vec3_t ent_distance = get_distance(ent_pos, local_pos);
+        struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
+        float ent_distance = get_distance(ent_pos, local_pos);
 
         // Common side between two right triangles
-        float w = sqrt((ent_distance.x * ent_distance.x) + (ent_distance.y * ent_distance.y));
-
-        float pitch_angle = atan2(ent_distance.z, w) * 180 / M_PI;        
-        float yaw_angle = atan2(ent_distance.y, ent_distance.x) * 180 / M_PI;
-
+        float w = sqrt((ent_difference.x * ent_difference.x) + (ent_difference.y * ent_difference.y));
+	
+        float pitch_angle = atan2(ent_difference.z, w) * 180 / M_PI;        
+        float yaw_angle = atan2(ent_difference.y, ent_difference.x) * 180 / M_PI;
+	
         struct vec3_t new_view_angle = {
             .x = -pitch_angle,
             .y = yaw_angle,
             .z = 0
         };
 
-        float yaw_delta = fabsf(new_view_angle.y - user_cmd->viewangles.y);
-
-        if (yaw_delta < 50.0f && yaw_delta < smallest_angle)
+        float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - new_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - new_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
+	
+        if (fov_distance <= 4*90 && fov_distance < smallest_fov_angle)
         {
-            smallest_angle = yaw_delta;
+            smallest_fov_angle = fov_distance;
             target_ent_index = ent_index;
             target_ent_pos = ent_pos;
             target_view_angle = new_view_angle;
@@ -198,7 +199,7 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
         
             int rocket_speed_per_second = weapon_id == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT ? 1980 : 1100;
             
-            float predicted_time = target_ent == NULL ? -1.0f : get_predicted_time(target_ent, get_distance(local_pos, target_ent_pos), rocket_speed_per_second);
+            float predicted_time = target_ent == NULL ? -1.0f : get_predicted_time(target_ent, get_difference(local_pos, target_ent_pos), rocket_speed_per_second);
 
             if (predicted_time == -1)
             {
@@ -227,13 +228,13 @@ void aim_at_best_target(void *localplayer, struct user_cmd *user_cmd)
                 target_ent_pos.z += (target_ent_velocity.z * predicted_time);
             }
 
-            struct vec3_t ent_distance = get_distance(target_ent_pos, local_pos);
+            struct vec3_t ent_difference = get_difference(target_ent_pos, local_pos);
 
             // Common side between two right triangles
-            float w = sqrt((ent_distance.x * ent_distance.x) + (ent_distance.y * ent_distance.y));
+            float w = sqrt((ent_difference.x * ent_difference.x) + (ent_difference.y * ent_difference.y));
 
-            float pitch_angle = atan2(ent_distance.z, w) * 180 / M_PI;        
-            float yaw_angle = atan2(ent_distance.y, ent_distance.x) * 180 / M_PI;
+            float pitch_angle = atan2(ent_difference.z, w) * 180 / M_PI;        
+            float yaw_angle = atan2(ent_difference.y, ent_difference.x) * 180 / M_PI;
 
             struct vec3_t new_view_angle = {
                 .x = -pitch_angle,

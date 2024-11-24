@@ -2,13 +2,18 @@
 
 #include <math.h>
 
-struct vec3_t get_distance(struct vec3_t pos1, struct vec3_t pos2)
+struct vec3_t get_difference(struct vec3_t pos1, struct vec3_t pos2)
 {
-    struct vec3_t distance;
-    distance.x = pos1.x - pos2.x;
-    distance.y = pos1.y - pos2.y;
-    distance.z = pos1.z - pos2.z;
-    return distance;
+    struct vec3_t difference;
+    difference.x = pos1.x - pos2.x;
+    difference.y = pos1.y - pos2.y;
+    difference.z = pos1.z - pos2.z;
+    return difference;
+}
+
+float get_distance(struct vec3_t pos1, struct vec3_t pos2)
+{
+  return sqrt(((pos1.x - pos2.x)*(pos1.x - pos2.x)) + ((pos1.y - pos2.y)*(pos1.y - pos2.y)) + ((pos1.z - pos2.z)*(pos1.z - pos2.z)));
 }
 
 float positive_quadratic_root(float a, float b, float c)
