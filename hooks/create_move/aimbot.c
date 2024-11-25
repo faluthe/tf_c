@@ -177,7 +177,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         rocket_predicted_pos.y += (ent_velocity.y * predicted_time);
         if ((get_ent_flags(entity) & 1) == 0)
         {
-            rocket_predicted_pos.z += (ent_velocity.z * predicted_time) - (0.5f * 800 * (predicted_time * predicted_time));
+            rocket_predicted_pos.z += (ent_velocity.z * predicted_time) - (0.25f * 800 * (predicted_time * predicted_time));
         }
         else
         {
@@ -217,7 +217,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     struct vec3_t target_screen;
     if (screen_position(&projectile_target_pos, &target_screen) == 0)
     {
-        add_to_render_queue(L"rocket", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){60, 5, 100}, 0.0f);
+        add_to_render_queue(L"X", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){147, 112, 219}, 0.0f);
     }
 
     if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))

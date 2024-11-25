@@ -23,7 +23,7 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     if (!hooked)
     {
         esp_font = text_create_font();
-        text_set_font_glyph_set(esp_font, "Tahoma", 15, 200, 0, 0, 0x210);
+        text_set_font_glyph_set(esp_font, "Tahoma", 20, 700, 0, 0, 0x200);
 
         init_render_queue();
 
