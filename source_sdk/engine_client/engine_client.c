@@ -55,10 +55,10 @@ __int8_t is_in_game()
     return func(interface);
 }
 
-__int8_t get_player_info(int ent_index, player_info_t *pinfo)
+__int8_t get_player_info(int ent_index, struct player_info_t *pinfo)
 {
     void **vtable = *(void ***)interface;
-    __int8_t (*func)(void *, int, player_info_t *) = vtable[8];
+    __int8_t (*func)(void *, int, struct player_info_t *) = vtable[8];
 
     return func(interface, ent_index, pinfo);
 }
