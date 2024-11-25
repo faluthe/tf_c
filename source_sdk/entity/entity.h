@@ -1,3 +1,6 @@
+#ifndef ENTITY_H
+#define ENTITY_H
+
 #include "../math/vec3.h"
 
 #include <stdbool.h>
@@ -36,3 +39,18 @@ enum
 	TF_CLASS_SPY,
 	TF_CLASS_ENGINEER
 };
+
+struct player_info_t
+{
+	char name[32];
+	int userID;
+	char guid[33];
+	unsigned long friendsID;
+	char friendsName[32];
+	bool fakeplayer;
+	bool ishltv;
+	unsigned long customFiles[4];
+	unsigned char filesDownloaded;
+};
+
+#endif //ENTITY_H
