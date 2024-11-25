@@ -43,14 +43,14 @@ enum
 struct player_info_t
 {
 	char name[32];
-	int userID;
+	int user_id;
 	char guid[33];
-	unsigned long friendsID;
-	char friendsName[32];
+	unsigned long friends_id;
+	char friends_name[32];
 	bool fakeplayer;
 	bool ishltv;
-	unsigned long customFiles[4];
-	unsigned char filesDownloaded;
+	unsigned long custom_files[4];
+	unsigned char files_downloaded;
 };
 
 #endif //ENTITY_H
