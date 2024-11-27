@@ -4,6 +4,7 @@
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/engine_trace/engine_trace.h"
 #include "../../source_sdk/entity_list/entity_list.h"
+#include "../../source_sdk/estimate_abs_velocity/estimate_abs_velocity.h"
 #include "../../source_sdk/global_vars/global_vars.h"
 #include "../../source_sdk/math/vec3.h"
 #include "../../source_sdk/net_channel_info/net_channel_info.h"
@@ -18,14 +19,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-float get_rocket_predicted_time(void *entity, struct vec3_t ent_distance, int rocket_speed_per_second)
+static bool hold_shot = true;
+
+float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_distance, __int32_t ent_flags, int rocket_speed_per_second)
 {
     const int gravity = 800;
 
-    struct vec3_t ent_velocity = get_ent_velocity(entity);
-
     // Not on the ground (affected by gravity)
-    if ((get_ent_flags(entity) & 1) == 0)
+    if ((ent_flags & 1) == 0)
     {
         float e = (ent_distance.z * ent_distance.z) + (ent_distance.y * ent_distance.y) + (ent_distance.x * ent_distance.x);
         float d = (2 * ent_distance.x * ent_velocity.x) + (2 * ent_distance.y * ent_velocity.y) + (2 * ent_distance.z * ent_velocity.z);
@@ -151,16 +152,31 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             continue;
         }
 
-        struct vec3_t ent_pos = get_ent_origin(entity);
+        struct vec3_t ent_pos;
+        if ((get_ent_flags(entity) & 1) == 0)
+        {
+            ent_pos = get_bone_pos(entity, 1);
+        }
+        else
+        {
+            ent_pos = get_ent_origin(entity);
+        }
         struct vec3_t local_pos = get_ent_eye_pos(localplayer);
         struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
+        struct vec3_t ent_velocity;
+        void *net_channel_info = get_net_channel_info();
+        float latency = get_latency(net_channel_info, 0) + get_latency(net_channel_info, 1) + 0.05;
+        estimate_abs_velocity(entity, &ent_velocity);
+        ent_pos.x += ent_velocity.x * latency;
+        ent_pos.y += ent_velocity.y * latency;
+        ent_pos.z += ent_velocity.z * latency;
 
         float predicted_time = -1.0f;
         switch (get_ent_class(localplayer))
         {
             case TF_CLASS_SOLDIER:
                 int rocket_speed_per_second = weapon_id == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT ? 1980 : 1100;
-                predicted_time = get_rocket_predicted_time(entity, ent_difference, rocket_speed_per_second);
+                predicted_time = get_rocket_predicted_time(ent_velocity, ent_difference, get_ent_flags(entity), rocket_speed_per_second);
                 break;
             default:
                 return;
@@ -172,12 +188,11 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         }
 
         struct vec3_t rocket_predicted_pos = ent_pos;
-        struct vec3_t ent_velocity = get_ent_velocity(entity);
         rocket_predicted_pos.x += (ent_velocity.x * predicted_time);
         rocket_predicted_pos.y += (ent_velocity.y * predicted_time);
         if ((get_ent_flags(entity) & 1) == 0)
         {
-            rocket_predicted_pos.z += (ent_velocity.z * predicted_time) - (0.25f * 800 * (predicted_time * predicted_time));
+            rocket_predicted_pos.z += (ent_velocity.z * predicted_time) - (0.5f * 800 * (predicted_time * predicted_time));
         }
         else
         {
@@ -196,7 +211,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         float ent_distance = get_distance(ent_pos, local_pos);
         float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - target_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - target_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
 
-        if (fov_distance < smallest_fov_angle)
+        if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
         {
             target_ent = entity;
             target_predicted_time = predicted_time;
@@ -208,6 +223,11 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
     if (target_ent == NULL)
     {
+        if (hold_shot)
+        {
+            user_cmd->buttons &= ~1;
+        }
+
         return;
     }
 
