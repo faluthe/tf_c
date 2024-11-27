@@ -23,7 +23,7 @@ __int32_t get_active_weapon(void *entity);
 struct vec3_t* get_collideable_mins(void *entity);
 struct vec3_t* get_collideable_maxs(void *entity);
 int get_tick_base(void *entity);
-int get_best_aim_bone(void *localplayer, void *entity);
+int get_head_bone(void *entity);
 bool can_attack(void *localplayer);
 
 enum

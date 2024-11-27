@@ -155,32 +155,26 @@ bool can_attack(void *localplayer)
     return true;
 }
 
-// Use localplayer's class to determine whether to baim, then use ent's class to determine head/torso bone id (different per class)
-int get_best_aim_bone(void *localplayer, void *entity)
+int get_head_bone(void *entity)
 {
-    bool baim = (get_ent_class(localplayer) != TF_CLASS_SNIPER || get_ent_health(entity) <= 50);
-
-    if (baim)
-    {
-        return 1;
-    }
-
     __int32_t ent_class = get_ent_class(entity);
 
-    if (ent_class == TF_CLASS_DEMOMAN)
+    switch (ent_class)
     {
+    case TF_CLASS_SCOUT:
+    case TF_CLASS_PYRO:
+    case TF_CLASS_SPY:
+    case TF_CLASS_MEDIC:
+    case TF_CLASS_HEAVYWEAPONS:
+        return 6;
+    case TF_CLASS_SNIPER:
+    case TF_CLASS_SOLDIER:
+        return 5;
+    case TF_CLASS_DEMOMAN:
         return 16;
-    }
-    else if (ent_class == TF_CLASS_ENGINEER)
-    {
+    case TF_CLASS_ENGINEER:
         return 8;
     }
-    else if (ent_class == TF_CLASS_SNIPER || ent_class == TF_CLASS_SOLDIER)
-    {
-        return 5;
-    }
-    else
-    {
-        return 6;
-    }
+
+    return 0;
 }
