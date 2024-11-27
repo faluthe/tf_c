@@ -1,6 +1,7 @@
 #include "hooks/hooks.h"
 #include "hooks/paint_traverse/paint_traverse.h"
 #include "interfaces/interfaces.h"
+#include "source_sdk/estimate_abs_velocity/estimate_abs_velocity.h"
 #include "utils/utils.h"
 
 #include <stdio.h>
@@ -21,6 +22,12 @@ __attribute__((constructor)) void init()
     if (!init_interfaces())
     {
         log_msg("Failed to initialize interfaces\n");
+        return;
+    }
+
+    if (!init_estimate_abs_velocity())
+    {
+        log_msg("Failed to initialize estimate_abs_velocity\n");
         return;
     }
 
