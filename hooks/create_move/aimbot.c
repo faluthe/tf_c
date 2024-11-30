@@ -13,6 +13,7 @@
 #include "../../utils/utils.h"
 #include "../paint_traverse/paint_traverse.h"
 #include "../hooks.h"
+#include "../../x11/x11.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -249,7 +250,9 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         add_to_render_queue(L"X", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){147, 112, 219}, 0.0f);
     }
 
-    if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    if (is_key_down('c')) user_cmd->buttons |= 1;
+
+    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
     {
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
@@ -301,7 +304,12 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){255, 75, 75}, target_ent);
 
-    if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    // Conveniently, X11's keysym matches the ASCII standard, so we can pass in human readable char constants. E. g. is_key_down('c') for the c key
+    // But, for keyboard keys that are not human readable (ALT, CTRL, ESC, etc.) we can't do the exact same.
+    // https://www.cl.cam.ac.uk/~mgk25/ucs/keysymdef.h is a list of all the key macros. E. g. is_key_down(XK_Alt_L) for the left ALT key.
+    if (is_key_down('c')) user_cmd->buttons |= 1;
+    
+    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
     {
         user_cmd->viewangles = target_view_angle;
     }
