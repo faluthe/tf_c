@@ -109,6 +109,44 @@ struct vec3_t get_view_angle(struct vec3_t diff)
     return view_angle;
 }
 
+void movement_fix(struct user_cmd *user_cmd, struct vec3_t original_view_angle, float original_forward_move, float original_side_move)
+{
+    float yaw_delta = user_cmd->viewangles.y - original_view_angle.y;
+    float original_yaw_correction = 0;
+    float current_yaw_correction = 0;
+
+    if (original_view_angle.y < 0.0f)
+    {
+        original_yaw_correction = 360.0f + original_view_angle.y;
+    }
+    else
+    {
+        original_yaw_correction = original_view_angle.y;
+    }
+    
+    if (user_cmd->viewangles.y < 0.0f)
+    {
+        current_yaw_correction = 360.0f + user_cmd->viewangles.y;
+    }
+    else
+    {
+	current_yaw_correction = user_cmd->viewangles.y;
+    }
+
+    if (current_yaw_correction < original_yaw_correction)
+    {
+        yaw_delta = abs(current_yaw_correction - original_yaw_correction);
+    }
+    else
+    {
+        yaw_delta = 360.0f - abs(original_yaw_correction - current_yaw_correction);
+    }
+    yaw_delta = 360.0f - yaw_delta;
+
+    user_cmd->forwardmove = cos((yaw_delta) * (M_PI/180)) * original_forward_move + cos((yaw_delta + 90.f) * (M_PI/180)) * original_side_move;
+    user_cmd->sidemove = sin((yaw_delta) * (M_PI/180)) * original_forward_move + sin((yaw_delta + 90.f) * (M_PI/180)) * original_side_move;
+}
+
 void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_id)
 {
     void *target_ent = NULL;
@@ -255,10 +293,16 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         esp_projectile_pos = projectile_target_pos;
         esp_predicted_time = get_global_vars_curtime() + target_predicted_time;
     }
+
+    movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
 }
 
 void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 {
+    struct vec3_t original_view_angle = user_cmd->viewangles;
+    float original_side_move = user_cmd->sidemove;
+    float original_forward_move = user_cmd->forwardmove;
+
     void *target_ent = NULL;
     struct vec3_t target_view_angle;
     float smallest_fov_angle = __FLT_MAX__;
@@ -305,6 +349,8 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
     {
         user_cmd->viewangles = target_view_angle;
     }
+
+    movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
 }
 
 void aimbot(void *localplayer, struct user_cmd *user_cmd)
