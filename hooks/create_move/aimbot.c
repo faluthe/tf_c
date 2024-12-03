@@ -11,6 +11,7 @@
 #include "../../source_sdk/user_cmd.h"
 #include "../../utils/math/math_utils.h"
 #include "../../utils/utils.h"
+#include "../../x11/x11.h"
 #include "../paint_traverse/paint_traverse.h"
 #include "../hooks.h"
 
@@ -291,7 +292,9 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         add_to_render_queue(L"X", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){147, 112, 219}, 0.0f);
     }
 
-    if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    if (is_key_down('c')) user_cmd->buttons |= 1;
+
+    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
     {
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
@@ -349,7 +352,9 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){255, 75, 75}, target_ent);
 
-    if ((user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    if (is_key_down('c')) user_cmd->buttons |= 1;
+    
+    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
     {
         user_cmd->viewangles = target_view_angle;
     }
