@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdint.h>
+#include <X11/Xlib.h>
 
 void log_msg(const char *format, ...);
 void close_log();
