@@ -30,12 +30,10 @@ void *get_net_channel_info()
 
 __int32_t get_max_clients()
 {
-    // Wrong index, using const for now
+    void **vtable = *(void ***)interface;
+    __int32_t (*func)(void *) = vtable[21];
 
-    // void **vtable = *(void ***)interface;
-    // __int32_t (*func)(void *) = vtable[21];
-
-    return 32;
+    return func(interface);
 }
 
 void get_screen_size(int *width, int *height)

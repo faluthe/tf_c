@@ -10,7 +10,7 @@ __int32_t get_ent_flags(void *entity);
 __int32_t get_ent_health(void *entity);
 __int32_t get_ent_max_health(void *entity);
 __int32_t get_ent_team(void *entity);
-__int32_t get_ent_class(void *entity);
+__int32_t get_player_class(void *entity);
 struct vec3_t get_ent_origin(void *entity);
 struct vec3_t get_ent_eye_pos(void *entity);
 struct vec3_t get_ent_angles(void *entity);
@@ -25,6 +25,7 @@ struct vec3_t* get_collideable_maxs(void *entity);
 int get_tick_base(void *entity);
 int get_head_bone(void *entity);
 bool can_attack(void *localplayer);
+int get_class_id(void *entity);
 
 enum
 {
@@ -38,6 +39,19 @@ enum
 	TF_CLASS_PYRO,
 	TF_CLASS_SPY,
 	TF_CLASS_ENGINEER
+};
+
+enum class_id
+{
+	AMMO_OR_HEALTH_PACK = 1,
+	DISPENSER = 86,
+	SENTRY = 88,
+	TELEPORTER = 89,
+	ARROW = 122,
+	ROCKET = 264,
+	PILL_OR_STICKY = 217,
+	FLARE = 257,
+	CROSSBOW_BOLT = 259,
 };
 
 struct player_info_t
