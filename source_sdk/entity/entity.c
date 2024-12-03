@@ -29,7 +29,7 @@ __int32_t get_ent_team(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0xDC);
 }
 
-__int32_t get_ent_class(void *entity)
+__int32_t get_player_class(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0x1BA0);
 }
@@ -38,7 +38,17 @@ struct vec3_t get_ent_origin(void *entity)
 {
     // x + 0x328, y + 0x332, z + 0x346
     return *(struct vec3_t *)((__uint64_t)(entity) + 0x328);
-}                                                           
+}
+
+void *get_collideable(void *entity)
+{
+    return (void *)((__uint64_t)(entity) + 0x240);
+}
+
+void *get_networkable(void *entity)
+{
+    return (void *)((__uint64_t)(entity) + 0x10);
+}
 
 struct vec3_t get_ent_eye_pos(void *entity)
 {
@@ -82,7 +92,7 @@ struct vec3_t get_bone_pos(void *entity, int bone_num)
 
 bool is_ent_dormant(void *entity)
 {
-    void *networkable = (void *)((__uint64_t)(entity) + 0x10);
+    void *networkable = get_networkable(entity);
     void **vtable = *(void ***)networkable;
 
     bool (*func)(void *) = vtable[8];
@@ -98,11 +108,6 @@ bool get_ent_lifestate(void *entity)
 __int32_t get_active_weapon(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0x11D0) & 0xFFF;
-}
-
-void *get_collideable(void *entity)
-{
-    return (void *)((__uint64_t)(entity) + 0x240);
 }
 
 struct vec3_t *get_collideable_mins(void *entity)
@@ -139,7 +144,7 @@ bool can_attack(void *localplayer)
         return false;
     }
 
-    if (get_ent_class(localplayer) == TF_CLASS_HEAVYWEAPONS)
+    if (get_player_class(localplayer) == TF_CLASS_HEAVYWEAPONS)
     {
         return true;
     }
@@ -157,7 +162,7 @@ bool can_attack(void *localplayer)
 
 int get_head_bone(void *entity)
 {
-    __int32_t ent_class = get_ent_class(entity);
+    __int32_t ent_class = get_player_class(entity);
 
     switch (ent_class)
     {
@@ -177,4 +182,20 @@ int get_head_bone(void *entity)
     }
 
     return 0;
+}
+
+void *get_client_class(void *entity)
+{
+    void *networkable = get_networkable(entity);
+    void **vtable = *(void ***)networkable;
+
+    void *(*func)(void *) = vtable[2];
+
+    return func(networkable);
+}
+
+int get_class_id(void *entity)
+{
+    void *client_class = get_client_class(entity);
+    return *(__int32_t *)((__uint64_t)(client_class) + 0x28);
 }

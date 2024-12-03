@@ -18,3 +18,12 @@ void *get_client_entity(__int32_t index)
     
     return func(interface, index);
 }
+
+int get_max_entities()
+{
+    void **vtable = *(void ***)interface;
+
+    int (*func)(void *) = vtable[8];
+
+    return func(interface);
+}

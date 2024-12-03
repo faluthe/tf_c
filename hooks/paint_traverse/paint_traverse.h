@@ -15,3 +15,4 @@ void draw_render_queue();
 void draw_bbox_decorators(int start_x, int start_y, void *entity);
 void clear_render_queue();
 void destroy_render_queue();
+void draw_entity_esp();
