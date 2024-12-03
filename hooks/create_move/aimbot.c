@@ -218,7 +218,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             struct vec3_t ent_difference = get_difference(ent_pos[i], local_pos);
             
             float predicted_time = -1.0f;
-            switch (get_ent_class(localplayer))
+            switch (get_player_class(localplayer))
             {
                 // TODO: Properly handle all weapons
                 case TF_CLASS_SOLDIER:
@@ -328,7 +328,7 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
             continue;
         }
  
-        int aim_bone = (get_ent_class(localplayer) != TF_CLASS_SNIPER || get_ent_health(entity) <= 50) ? 1 : get_head_bone(entity);
+        int aim_bone = (get_player_class(localplayer) != TF_CLASS_SNIPER || get_ent_health(entity) <= 50) ? 1 : get_head_bone(entity);
         struct vec3_t ent_pos = get_bone_pos(entity, aim_bone);
         struct vec3_t local_pos = get_ent_eye_pos(localplayer);
         struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
@@ -370,7 +370,7 @@ void aimbot(void *localplayer, struct user_cmd *user_cmd)
         return;
     }
     int weapon_id = get_weapon_id(active_weapon);
-    bool is_projectile_class = get_ent_class(localplayer) == TF_CLASS_SOLDIER;
+    bool is_projectile_class = get_player_class(localplayer) == TF_CLASS_SOLDIER;
     bool is_projectile_weapon = weapon_id == TF_WEAPON_ROCKETLAUNCHER || weapon_id == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT;
     
     if (is_projectile_class && is_projectile_weapon)
