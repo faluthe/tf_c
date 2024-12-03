@@ -21,6 +21,7 @@
 #include <stdlib.h>
 
 static bool hold_shot = false;
+static bool use_aim_key = false;
 
 float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_distance, bool ent_in_air, int rocket_speed_per_second)
 {
@@ -357,9 +358,9 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         add_to_render_queue(L"V", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){207, 115, 54}, 0.0f);
     }
 
-    if (is_key_down('c')) user_cmd->buttons |= 1;
+    if (use_aim_key && is_key_down('c')) user_cmd->buttons |= 1;
 
-    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    if (((use_aim_key && is_key_down('c')) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
     {
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
@@ -450,9 +451,9 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
 
-    if (is_key_down('c')) user_cmd->buttons |= 1;
+    if (use_aim_key && is_key_down('c')) user_cmd->buttons |= 1;
     
-    if (is_key_down('c') && (user_cmd->buttons & 1) != 0 && can_attack(localplayer))
+    if (((use_aim_key && is_key_down('c')) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
     {
         user_cmd->viewangles = target_view_angle;
     }

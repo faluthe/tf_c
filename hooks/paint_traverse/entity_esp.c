@@ -87,12 +87,12 @@ void draw_entity_esp()
         if (team == 2)
         {
             draw_set_color(184, 56, 59, 255);
-            draw_set_text_color(184, 56, 59, 255);
+            draw_set_text_color(220, 20, 30, 255);
         }
         else if (team == 3)
         {
             draw_set_color(88, 133, 162, 255);
-            draw_set_text_color(88, 133, 162, 255);
+            draw_set_text_color(70, 120, 200, 255);
         }
         else
         {
