@@ -149,6 +149,10 @@ void movement_fix(struct user_cmd *user_cmd, struct vec3_t original_view_angle, 
 
 void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_id)
 {
+    struct vec3_t original_view_angle = user_cmd->viewangles;
+    float original_side_move = user_cmd->sidemove;
+    float original_forward_move = user_cmd->forwardmove;
+
     void *target_ent = NULL;
     float target_predicted_time = -1.0f;
     struct vec3_t projectile_target_view_angle;
