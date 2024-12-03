@@ -3,6 +3,7 @@
 #include "../../source_sdk/surface/surface.h"
 #include "../../utils/utils.h"
 #include "esp_util/esp_util.h"
+#include "paint_traverse.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -15,23 +16,23 @@ const char *get_class_name(enum class_id class_id)
     switch (class_id)
     {
         case AMMO_OR_HEALTH_PACK:
-            return "Ammo/Health Pack";
+            return "AMMO/HP";
         case DISPENSER:
-            return "Dispenser";
+            return "DISPENSER";
         case SENTRY:
-            return "Sentry";
+            return "SENTRY";
         case TELEPORTER:
-            return "Teleporter";
+            return "TELEPORTER";
         case ARROW:
-            return "Arrow";
+            return "ARROW";
         case ROCKET:
-            return "Rocket";
+            return "ROCKET";
         case PILL_OR_STICKY:
-            return "Pill/Sticky";
+            return "NADE";
         case FLARE:
-            return "Flare";
+            return "FLARE";
         case CROSSBOW_BOLT:
-            return "Crossbow Bolt";
+            return "BOLT";
         default:
             return NULL;
     }
@@ -85,13 +86,13 @@ void draw_entity_esp()
         
         if (team == 2)
         {
-            draw_set_color(255, 0, 0, 255);
-            draw_set_text_color(255, 0, 0, 255);
+            draw_set_color(184, 56, 59, 255);
+            draw_set_text_color(184, 56, 59, 255);
         }
         else if (team == 3)
         {
-            draw_set_color(0, 0, 255, 255);
-            draw_set_text_color(0, 0, 255, 255);
+            draw_set_color(88, 133, 162, 255);
+            draw_set_text_color(88, 133, 162, 255);
         }
         else
         {
@@ -105,8 +106,10 @@ void draw_entity_esp()
         size_t len = mbstowcs(class_name_w, class_name, 64);
         if (len != (size_t)-1)
         {
-            draw_set_text_pos(box.right + 20, box.top);
+            draw_set_text_pos(box.left, box.top - 20);
             draw_print_text(class_name_w, wcslen(class_name_w));
         }
+
+        draw_bbox_decorators(box.right + 20, box.top, entity);
     }
 }
