@@ -29,7 +29,7 @@ __attribute__((constructor)) void init()
     if (!init_x11())
     {
         log_msg("Failed to initialize X11\n");
-	return;
+	    return;
     }
     
     if (!init_estimate_abs_velocity())
