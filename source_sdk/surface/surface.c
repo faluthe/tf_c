@@ -85,3 +85,12 @@ void draw_print_text(const wchar_t *text, int text_len)
 
     func(interface, text, text_len, 0);
 }
+
+void set_cursor_visible(bool visible)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, bool) = vtable[52];
+
+    func(interface, visible);
+}

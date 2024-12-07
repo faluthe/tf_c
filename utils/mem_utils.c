@@ -93,3 +93,47 @@ void *pattern_scan(const char *lib_name, __uint8_t *pattern, const char *mask)
     fclose(maps);
     return NULL;
 }
+
+bool init_sdl_hook(void *lib_handle, const char *func_name, void *hook, void **original)
+{
+    void *func = dlsym(lib_handle, func_name);
+
+    if (!func)
+    {
+        log_msg("Failed to get %s\n", func_name);
+        return false;
+    }
+
+    log_msg("%s wrapper found at %p\n", func_name, func);
+
+    /* The symbols resolve to a wrapper function. They are a just a 2 byte
+     * `jmp` and then a SIGNED (?) 4 byte offset relative to the instruction
+     * pointer. Adding `ip + the offset` is a pointer to the address of the 
+     * function that is wrapped. We save the orignal and call it in the hook. */
+    int32_t offset = *(int32_t *)((uint64_t)func + 2);
+    void **ptr_to_func = (void *)((uint64_t)func + 6 + offset);
+    *original = *ptr_to_func;
+
+    log_msg("Original %s at %p\n", func_name, *original);
+
+    // The page should have rw perms already! No mprotect needed
+    *ptr_to_func = hook;
+
+    return true;
+}
+
+bool restore_sdl_hook(void *lib_handle, const char *func_name, void *original)
+{
+    void *func = dlsym(lib_handle, func_name);
+
+    if (!func)
+    {
+        log_msg("Failed to get %s\n", func_name);
+        return false;
+    }
+
+    int32_t offset = *(int32_t *)((uint64_t)func + 2);
+    *(void **)((uint64_t)func + 6 + offset) = original;
+
+    return true;
+}

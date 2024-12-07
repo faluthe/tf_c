@@ -1,3 +1,4 @@
+#include "../../config/config.h"
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/entity_list/entity_list.h"
@@ -13,14 +14,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-void draw_2d_box(void *entity, int ent_index, bool draw_box, bool draw_health_bar, bool draw_name)
+void draw_2d_box(void *entity, int ent_index)
 {
-    struct player_info_t ent_info;
-    if (!get_player_info(ent_index, &ent_info))
-    {
-        return;
-    }
-
     struct bounding_box box = get_ent_2d_box(entity);
 
     if (!is_good_box(box))
@@ -35,13 +30,13 @@ void draw_2d_box(void *entity, int ent_index, bool draw_box, bool draw_health_ba
     box.right -= height / 10;
     height = box.bottom - box.top;
     
-    if (draw_box)
+    if (config.esp.player_bounding_box)
     {
         draw_set_color(255, 255, 255, 255);
         draw_filled_rect(box.left, box.top, box.right, box.bottom);
     }
 
-    if (draw_health_bar)
+    if (config.esp.player_health_bar)
     {
         int max_health = get_ent_max_health(entity);
         int health = get_ent_health(entity) > max_health ? max_health : get_ent_health(entity);
@@ -65,8 +60,14 @@ void draw_2d_box(void *entity, int ent_index, bool draw_box, bool draw_health_ba
         }
     }
 
-    if (draw_name)
+    if (config.esp.player_name)
     {
+        struct player_info_t ent_info;
+        if (!get_player_info(ent_index, &ent_info))
+        {
+            return;
+        }
+
         //convert to wide char string
         wchar_t name[32];
         size_t len = mbstowcs(name, ent_info.name, 32);
@@ -108,6 +109,6 @@ void draw_player_esp()
             continue;
         }
 
-        draw_2d_box(entity, ent_index, false, true, true);
+        draw_2d_box(entity, ent_index);
     }
 }

@@ -22,7 +22,7 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     if (!hooked)
     {
         esp_font = text_create_font();
-        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 17, 700, 0, 0, 0x80);
+        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 17, 700, 0, 0, 0x90);
 
         init_render_queue();
 
@@ -37,9 +37,6 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     }
 
     draw_set_text_font(esp_font);
-    draw_set_text_color(255, 255, 255, 255);
-    draw_set_text_pos(50, 50);
-    draw_print_text(L"TF_C", 4);
 
     draw_player_esp();
     draw_entity_esp();

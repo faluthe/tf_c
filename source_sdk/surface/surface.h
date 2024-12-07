@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdbool.h>
 #include <wchar.h>
 
 void set_surface_interface(void *surface_interface);
@@ -10,3 +11,4 @@ void draw_set_text_font(unsigned long font);
 void draw_set_text_color(int r, int g, int b, int a);
 void draw_set_text_pos(unsigned int x, unsigned int y);
 void draw_print_text(const wchar_t *text, int text_len);
+void set_cursor_visible(bool visible);

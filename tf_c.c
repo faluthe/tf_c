@@ -1,3 +1,4 @@
+#include "config/config.h"
 #include "hooks/hooks.h"
 #include "hooks/paint_traverse/paint_traverse.h"
 #include "interfaces/interfaces.h"
@@ -19,6 +20,12 @@ __attribute__((destructor)) void unload()
 __attribute__((constructor)) void init()
 {
     log_msg("Initializing tf_c...\n");
+
+    if (!init_config())
+    {
+        log_msg("Failed to initialize config\n");
+        return;
+    }
 
     if (!init_interfaces())
     {

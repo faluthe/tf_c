@@ -10,9 +10,10 @@ fi
 LIB_PATH=$(pwd)/tf_c.so
 PROCID=$(pgrep tf_linux64 | head -n 1)
 
+# TBD: Read dlerror() if an error occurs
 if [ "$DEBUG" = true ] || [ "$COMPILE" = true ]; then
     echo "Compiling shared library with $(find . -name '*.c')"
-    gcc $(find . -name '*.c') -shared -fpic -g -o tf_c.so -Wall
+    gcc $(find . -name '*.c') -shared -fpic -l:libGLEW.so.2.1 -lSDL2 -g -o tf_c.so -Wall
     if [ $? -ne 0 ]; then
 	echo "Failed to build"
 	exit 1
