@@ -94,3 +94,12 @@ void set_cursor_visible(bool visible)
 
     func(interface, visible);
 }
+
+void draw_circle(int x, int y, int radius, int segments)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, int, int, int, int) = vtable[99];
+
+    func(interface, x, y, radius, segments);
+}

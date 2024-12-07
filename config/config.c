@@ -5,6 +5,7 @@ struct config config;
 bool init_config()
 {
     // TBD: Read config from file
+    config.aimbot_fov = 10.0f;
     config.esp.player_health_bar = 1;
     config.esp.player_bounding_box = 1;
     config.esp.player_name = 1;

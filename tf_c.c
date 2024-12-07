@@ -14,13 +14,10 @@ __attribute__((destructor)) void unload()
     restore_hooks();
     destroy_render_queue();
     log_msg("tf_c unloaded\n");
-    close_log();
 }
 
 __attribute__((constructor)) void init()
 {
-    log_msg("Initializing tf_c...\n");
-
     if (!init_config())
     {
         log_msg("Failed to initialize config\n");

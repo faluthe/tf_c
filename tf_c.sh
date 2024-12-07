@@ -60,6 +60,6 @@ else
 
     echo "Library loaded successfully at $LIB_HANDLE. Use Ctrl+C to unload."
     
-    tail -f /tmp/tf_c.log
-    # log file should get automatically cleaned up on power off or boot
+    # Logs are printed to STDERR, watch load logs via `cat /proc/$(pidof tf_linux64)/fd/2` from another terminal
+    cat /proc/$(pidof tf_linux64)/fd/2
 fi

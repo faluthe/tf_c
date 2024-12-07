@@ -2,6 +2,7 @@
 
 struct config
 {
+    float aimbot_fov;
     struct
     {
         // Player ESP

@@ -12,6 +12,13 @@ void watermark(struct nk_context *ctx)
     nk_end(ctx);
 }
 
+void draw_aim_tab(struct nk_context *ctx)
+{
+    nk_layout_row_dynamic(ctx, 20, 4);
+    nk_label(ctx, "Aimbot FOV", NK_TEXT_LEFT);
+    nk_slider_float(ctx, 2.0f, &config.aimbot_fov, 50.0f, 1.0f);
+}
+
 void draw_esp_tab(struct nk_context *ctx)
 {
     nk_layout_row_dynamic(ctx, 30, 1);
@@ -69,6 +76,7 @@ void draw_menu(struct nk_context *ctx)
             nk_layout_row_dynamic(ctx, 30, 3);
             if (nk_button_label(ctx, "Aim"))
             {
+                log_msg("Button presed\n");
                 tab = 0;
             }
 
@@ -85,8 +93,7 @@ void draw_menu(struct nk_context *ctx)
             switch (tab)
             {
                 case 0:
-                    nk_layout_row_dynamic(ctx, 30, 1);
-                    nk_label(ctx, "Aim tab", NK_TEXT_CENTERED);
+                    draw_aim_tab(ctx);
                     break;
                 case 1:
                     draw_esp_tab(ctx);

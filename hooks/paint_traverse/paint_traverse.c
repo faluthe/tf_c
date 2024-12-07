@@ -1,7 +1,9 @@
+#include "../../config/config.h"
 #include "../../source_sdk/surface/surface.h"
 #include "../../source_sdk/panel/panel.h"
 #include "paint_traverse.h"
 
+#include <math.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -11,6 +13,18 @@
 
 // extern
 __int64_t (*paint_traverse_original)(void *, void *, __int8_t, __int8_t) = NULL;
+
+// TBD: Fix this (not accurate)
+void draw_aimbot_fov()
+{
+    int w = 1920;
+    int h = 1080;
+
+    int radius = tan(config.aimbot_fov / 180 * M_PI) / tan((90.0f / 2) / 180 * M_PI) * (w / 2);
+
+    draw_set_color(0, 0, 255, 255);
+    draw_circle(w / 2, h /2, radius * 0.75, 255);
+}
 
 void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8_t allow_force)
 {
@@ -41,4 +55,5 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     draw_player_esp();
     draw_entity_esp();
     draw_render_queue();
+    draw_aimbot_fov();
 }

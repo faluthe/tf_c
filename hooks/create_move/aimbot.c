@@ -1,3 +1,4 @@
+#include "../../config/config.h"
 #include "../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/entity/weapon_entity.h"
@@ -149,6 +150,22 @@ void movement_fix(struct user_cmd *user_cmd, struct vec3_t original_view_angle, 
     user_cmd->sidemove = sin((yaw_delta) * (M_PI/180)) * original_forward_move + sin((yaw_delta + 90.f) * (M_PI/180)) * original_side_move;
 }
 
+float get_fov(struct vec3_t view_angle, struct vec3_t target_view_angle)
+{
+    float x_diff = target_view_angle.x - view_angle.x;
+    float y_diff = target_view_angle.y - view_angle.y;
+
+    float x = remainderf(x_diff, 360.0f);
+    float y = remainderf(y_diff, 360.0f);
+
+    float clamped_x = x > 89.0f ? 89.0f : x < -89.0f ? -89.0f : x;
+    float clamped_y = y > 180.0f ? 180.0f : y < -180.0f ? -180.0f : y;
+
+    float fov = hypotf(clamped_x, clamped_y);
+
+    return fov;
+}
+
 void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_id)
 {
     struct vec3_t original_view_angle = user_cmd->viewangles;
@@ -208,14 +225,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
         if (is_ent_visible(localplayer, entity))
         {
-            float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-            float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+            struct vec3_t new_view_angle = get_view_angle(ent_difference);
+            float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-            if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+            if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
             {
                 target_ent = entity;
                 smallest_fov_angle = fov_distance;
-                projectile_target_view_angle = get_view_angle(ent_difference);
+                projectile_target_view_angle = new_view_angle;
                 projectile_target_pos = ent_pos;
             }
         }
@@ -289,18 +306,17 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 // TODO: Check if the rocket is going to hit a wall
                 if (is_pos_visible(localplayer, rocket_predicted_pos))
                 {
-                    struct vec3_t target_view_angle = get_view_angle(ent_difference);
-                    struct vec3_t new_view_angle = get_view_angle(get_difference(rocket_predicted_pos, local_pos));
+                    struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                    struct vec3_t rocket_view_angle = get_view_angle(get_difference(rocket_predicted_pos, local_pos));
                     
-                    float ent_distance = get_distance(ent_pos[i], local_pos);
-                    float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - target_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - target_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
+                    float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                    if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                    if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
                     {
                         target_ent = entity;
                         target_predicted_time = predicted_time;
                         smallest_fov_angle = fov_distance;
-                        projectile_target_view_angle = new_view_angle;
+                        projectile_target_view_angle = rocket_view_angle;
                         projectile_target_pos = rocket_predicted_pos;
                     }
                 }
@@ -325,14 +341,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
             if (is_ent_visible(localplayer, entity))
             {
-                float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-                float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+                struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
-                    projectile_target_view_angle = get_view_angle(ent_difference);
+                    projectile_target_view_angle = new_view_angle;
                     projectile_target_pos = ent_pos;
                 }
             }
@@ -400,10 +416,9 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
         struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
         struct vec3_t new_view_angle = get_view_angle(ent_difference);
 
-        float ent_distance = get_distance(ent_pos, local_pos);
-        float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - new_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - new_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
+        float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
     
-        if (fov_distance < smallest_fov_angle)
+        if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
         {
             target_ent = entity;
             smallest_fov_angle = fov_distance;
@@ -431,14 +446,14 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
             if (is_ent_visible(localplayer, entity))
             {
-                float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-                float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+                struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
-                    target_view_angle = get_view_angle(ent_difference);
+                    new_view_angle = new_view_angle;
                 }
             }
         }

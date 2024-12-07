@@ -12,3 +12,4 @@ void draw_set_text_color(int r, int g, int b, int a);
 void draw_set_text_pos(unsigned int x, unsigned int y);
 void draw_print_text(const wchar_t *text, int text_len);
 void set_cursor_visible(bool visible);
+void draw_circle(int x, int y, int radius, int segments);
