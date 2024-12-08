@@ -8,7 +8,7 @@ bool init_config()
     config.aimbot.aimbot_enabled = 1;
     config.aimbot.draw_fov = 1;
     config.aimbot.fov = 10.0f;
-    config.aimbot.fov_color = (struct nk_colorf){ 0.0f, 0.0f, 1.0f, 0.25f };
+    config.aimbot.fov_color = (struct nk_colorf){ 207.0f / 255.0f, 115.0f / 255.0f, 54.0f / 255.0f, 0.25f };
     config.esp.player_health_bar = 1;
     config.esp.player_bounding_box = 1;
     config.esp.player_name = 1;

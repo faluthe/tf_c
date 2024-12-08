@@ -12,13 +12,65 @@ void watermark(struct nk_context *ctx)
     nk_end(ctx);
 }
 
+void multi_select_combo_box(struct nk_context *ctx, const char **options, int options_count, int **selections, int selection_count, char *preview_text, int preview_text_size)
+{
+    preview_text[0] = '\0';
+    for (int k = 0; k < options_count; k++)
+    {
+        if (*selections[k])
+        {
+            if (strlen(preview_text) > 0)
+            {
+                strncat(preview_text, ", ", preview_text_size - strlen(preview_text) - 1);
+            }
+            strncat(preview_text, options[k], preview_text_size - strlen(preview_text) - 1);
+        }
+    }
+    if (strlen(preview_text) == 0)
+    {
+        strncpy(preview_text, "None", preview_text_size - 1);
+        preview_text[preview_text_size - 1] = '\0';
+    }
+
+    if (nk_combo_begin_label(ctx, preview_text, nk_vec2(nk_widget_width(ctx), 300)))
+    {
+        nk_layout_row_dynamic(ctx, 20, 1);
+        for (int i = 0; i < options_count; i++)
+        {
+            if (nk_checkbox_label(ctx, options[i], selections[i]))
+            {
+                preview_text[0] = '\0';
+                for (int k = 0; k < options_count; k++)
+                {
+                    if (*selections[k])
+                    {
+                        if (strlen(preview_text) > 0)
+                        {
+                            strncat(preview_text, ", ", preview_text_size - strlen(preview_text) - 1);
+                        }
+                        strncat(preview_text, options[k], preview_text_size - strlen(preview_text) - 1);
+                    }
+                }
+                if (strlen(preview_text) == 0)
+                {
+                    strncpy(preview_text, "None", preview_text_size - 1);
+                    preview_text[preview_text_size - 1] = '\0';
+                }
+            }
+        }
+        nk_combo_end(ctx);
+    }
+}
+
 void draw_aim_tab(struct nk_context *ctx)
 {
     nk_layout_row_dynamic(ctx, 20, 1);
     nk_checkbox_label(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
 
     nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Aimbot FOV:", NK_TEXT_LEFT);
+    char fov_text[32];
+    sprintf(fov_text, "Aimbot FOV: %.0f\xC2\xB0", config.aimbot.fov);
+    nk_label(ctx, fov_text, NK_TEXT_LEFT);
     nk_slider_float(ctx, 1.0f, &config.aimbot.fov, 50.0f, 1.0f);
     
     nk_layout_row_dynamic(ctx, 20, 2);
@@ -36,6 +88,8 @@ void draw_aim_tab(struct nk_context *ctx)
 
 void draw_esp_tab(struct nk_context *ctx)
 {
+    static const char *entity_esp_options[] = { "Name", "Bounding box" };
+
     nk_layout_row_dynamic(ctx, 30, 1);
     nk_label(ctx, "Enemy Player ESP", NK_TEXT_LEFT);
 
@@ -51,35 +105,35 @@ void draw_esp_tab(struct nk_context *ctx)
     nk_layout_row_dynamic(ctx, 30, 1);
     nk_label(ctx, "Entity ESP", NK_TEXT_LEFT);
 
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Ammo & HP name", &config.esp.ammo_hp_ents_name);
+    static int *ammo_hp_selections[] = { &config.esp.ammo_hp_ents_name, &config.esp.ammo_hp_ents_bounding_box };
+    static char ammo_hp_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Ammo/HP:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, entity_esp_options, 2, ammo_hp_selections, 2, ammo_hp_preview_text, sizeof(ammo_hp_preview_text));
 
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Ammo & HP bounding box", &config.esp.ammo_hp_ents_bounding_box);
+    static int *sentry_selections[] = { &config.esp.sentry_name, &config.esp.sentry_bounding_box };
+    static char sentry_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Sentry:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, entity_esp_options, 2, sentry_selections, 2, sentry_preview_text, sizeof(sentry_preview_text));
 
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Sentry name", &config.esp.sentry_name);
+    static int *teleporter_selections[] = { &config.esp.teleporter_name, &config.esp.teleporter_bounding_box };
+    static char teleporter_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Teleporter:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, entity_esp_options, 2, teleporter_selections, 2, teleporter_preview_text, sizeof(teleporter_preview_text));
 
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Sentry bounding box", &config.esp.sentry_bounding_box);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Teleporter name", &config.esp.teleporter_name);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Teleporter bounding box", &config.esp.teleporter_bounding_box);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Dispenser name", &config.esp.dispenser_name);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Dispenser bounding box", &config.esp.dispenser_bounding_box);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Friendly dispenser name", &config.esp.friendly_dispenser_name);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Friendly dispenser bounding box", &config.esp.friendly_dispenser_bounding_box);
+    static int *dispenser_selections[] = { &config.esp.dispenser_name, &config.esp.dispenser_bounding_box };
+    static char dispenser_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Dispenser:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, entity_esp_options, 2, dispenser_selections, 2, dispenser_preview_text, sizeof(dispenser_preview_text));
+    
+    static int *friendly_dispenser_selections[] = { &config.esp.friendly_dispenser_name, &config.esp.friendly_dispenser_bounding_box };
+    static char friendly_dispenser_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Friendly dispenser:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, entity_esp_options, 2, friendly_dispenser_selections, 2, friendly_dispenser_preview_text, sizeof(friendly_dispenser_preview_text));
 }
 
 void draw_tab(struct nk_context *ctx, const char *name, int *tab, int index)
