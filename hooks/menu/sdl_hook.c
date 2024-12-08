@@ -64,6 +64,8 @@ void swap_window_hook(void *window)
         }
 
         ctx = nk_sdl_init(window);
+
+        set_style(ctx);
         
         struct nk_font_atlas *atlas = NULL;
         nk_sdl_font_stash_begin(&atlas);
