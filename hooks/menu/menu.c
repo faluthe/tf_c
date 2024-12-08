@@ -82,6 +82,22 @@ void draw_esp_tab(struct nk_context *ctx)
     nk_checkbox_label(ctx, "Friendly dispenser bounding box", &config.esp.friendly_dispenser_bounding_box);
 }
 
+void draw_tab(struct nk_context *ctx, const char *name, int *tab, int index)
+{
+    if (*tab == index)
+    {
+        ctx->style.button.normal.data.color = nk_rgb(35, 35, 35);
+    }
+    else
+    {
+        ctx->style.button.normal.data.color = nk_rgb(50, 50, 50);
+    }
+    if (nk_button_label(ctx, name))
+    {
+        *tab = index;
+    }
+}
+
 void draw_menu(struct nk_context *ctx)
 {
     if (nk_begin(ctx, "TF_C", nk_rect(200, 200, 500, 600), NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_TITLE))
@@ -89,20 +105,9 @@ void draw_menu(struct nk_context *ctx)
             static int tab = 0;
 
             nk_layout_row_dynamic(ctx, 30, 3);
-            if (nk_button_label(ctx, "Aim"))
-            {
-                tab = 0;
-            }
-
-            if (nk_button_label(ctx, "ESP"))
-            {
-                tab = 1;
-            }
-
-            if (nk_button_label(ctx, "Misc"))
-            {
-                tab = 2;
-            }
+            draw_tab(ctx, "Aim", &tab, 0);
+            draw_tab(ctx, "ESP", &tab, 1);
+            draw_tab(ctx, "Misc", &tab, 2);
 
             switch (tab)
             {

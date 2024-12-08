@@ -34,6 +34,17 @@ void get_input(struct nk_context *ctx)
     }
 }
 
+void set_style(struct nk_context *ctx)
+{
+    struct nk_color table[NK_COLOR_COUNT];
+    memcpy(table, nk_default_color_style, sizeof(nk_default_color_style));
+
+    table[NK_COLOR_TOGGLE_CURSOR] = nk_rgba(207, 115, 54, 255);
+    table[NK_COLOR_TOGGLE_HOVER] = nk_rgba(207, 115, 54, 255 / 2);
+
+    nk_style_from_table(ctx, table);
+}
+
 void swap_window_hook(void *window)
 {
     static struct nk_context *ctx = NULL;
@@ -53,9 +64,8 @@ void swap_window_hook(void *window)
         }
 
         ctx = nk_sdl_init(window);
-
+        
         struct nk_font_atlas *atlas = NULL;
-
         nk_sdl_font_stash_begin(&atlas);
         nk_sdl_font_stash_end();
     }
