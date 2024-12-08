@@ -16,7 +16,7 @@ void draw_aim_tab(struct nk_context *ctx)
 {
     nk_layout_row_dynamic(ctx, 20, 4);
     nk_label(ctx, "Aimbot FOV", NK_TEXT_LEFT);
-    nk_slider_float(ctx, 2.0f, &config.aimbot_fov, 50.0f, 1.0f);
+    nk_slider_float(ctx, 1.0f, &config.aimbot_fov, 50.0f, 1.0f);
 }
 
 void draw_esp_tab(struct nk_context *ctx)

@@ -67,32 +67,37 @@ void draw_entity_esp()
         int local_team = get_ent_team(localplayer);
         const char *class_name = get_class_name(class_id);
 
-        if (class_name == NULL || (class_id == ARROW && team == local_team) || (class_id == ROCKET && team == local_team) || (class_id == PILL_OR_STICKY && team == local_team) || (class_id == FLARE && team == local_team))
+        if (class_name == NULL)
         {
             continue;
         }
 
-        if ((class_id == AMMO_OR_HEALTH_PACK && team != 0) || !(config.esp.ammo_hp_ents_name || config.esp.ammo_hp_ents_bounding_box))
+        if ((class_id == ARROW && team == local_team) || (class_id == ROCKET && team == local_team) || (class_id == PILL_OR_STICKY && team == local_team) || (class_id == FLARE && team == local_team))
         {
             continue;
         }
 
-        if ((class_id == SENTRY && team == local_team) || !(config.esp.sentry_name || config.esp.sentry_bounding_box))
+        if ((class_id == AMMO_OR_HEALTH_PACK && team != 0) || (class_id == AMMO_OR_HEALTH_PACK && !(config.esp.ammo_hp_ents_name || config.esp.ammo_hp_ents_bounding_box)))
         {
             continue;
         }
 
-        if ((class_id == TELEPORTER && team == local_team) || !(config.esp.teleporter_name || config.esp.teleporter_bounding_box))
+        if ((class_id == SENTRY && team == local_team) || (class_id == SENTRY && !(config.esp.sentry_name || config.esp.sentry_bounding_box)))
         {
             continue;
         }
 
-        if ((class_id == DISPENSER && team == local_team) || !(config.esp.dispenser_name || config.esp.dispenser_bounding_box))
+        if ((class_id == TELEPORTER && team == local_team) || (class_id == TELEPORTER && !(config.esp.teleporter_name || config.esp.teleporter_bounding_box)))
         {
             continue;
         }
 
-        if ((class_id == DISPENSER && team != local_team) || !(config.esp.friendly_dispenser_name || config.esp.friendly_dispenser_bounding_box))
+        if ((class_id == DISPENSER && team == local_team) || (class_id == DISPENSER && !(config.esp.dispenser_name || config.esp.dispenser_bounding_box)))
+        {
+            continue;
+        }
+
+        if ((class_id == DISPENSER && team != local_team) || (class_id == DISPENSER && !(config.esp.friendly_dispenser_name || config.esp.friendly_dispenser_bounding_box)))
         {
             continue;
         }
@@ -104,19 +109,20 @@ void draw_entity_esp()
             continue;
         }
         
+        struct vec3_t box_color;
         if (team == 2)
         {
-            draw_set_color(184, 56, 59, 255);
+            box_color = (struct vec3_t){ 184, 56, 59 };
             draw_set_text_color(220, 20, 30, 255);
         }
         else if (team == 3)
         {
-            draw_set_color(88, 133, 162, 255);
+            box_color = (struct vec3_t){ 88, 133, 162 };
             draw_set_text_color(70, 120, 200, 255);
         }
         else
         {
-            draw_set_color(255, 255, 255, 255);
+            box_color = (struct vec3_t){ 255, 255, 255 };
             draw_set_text_color(255, 255, 255, 255);
         }
 
@@ -140,7 +146,7 @@ void draw_entity_esp()
 
                 if (config.esp.ammo_hp_ents_bounding_box)
                 {
-                    draw_filled_rect(box.left, box.top, box.right, box.bottom);
+                    draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
                 }
 
                 break;
@@ -152,7 +158,7 @@ void draw_entity_esp()
 
                 if (config.esp.sentry_bounding_box)
                 {
-                    draw_filled_rect(box.left, box.top, box.right, box.bottom);
+                    draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
                 }
 
                 break;
@@ -164,7 +170,7 @@ void draw_entity_esp()
 
                 if (config.esp.teleporter_bounding_box)
                 {
-                    draw_filled_rect(box.left, box.top, box.right, box.bottom);
+                    draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
                 }
 
                 break;
@@ -176,7 +182,7 @@ void draw_entity_esp()
 
                 if (config.esp.dispenser_bounding_box)
                 {
-                    draw_filled_rect(box.left, box.top, box.right, box.bottom);
+                    draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
                 }
 
                 break;

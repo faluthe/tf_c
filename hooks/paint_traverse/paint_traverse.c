@@ -16,6 +16,7 @@
 // extern
 __int64_t (*paint_traverse_original)(void *, void *, __int8_t, __int8_t) = NULL;
 
+// TBD: Fix for scoped weapons
 void draw_aimbot_fov()
 {
     if (!is_in_game())
@@ -49,7 +50,7 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     if (!hooked)
     {
         esp_font = text_create_font();
-        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 17, 700, 0, 0, 0x90);
+        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 14, 250, 0, 0, 0x90);
 
         init_render_queue();
 

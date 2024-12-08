@@ -32,8 +32,7 @@ void draw_2d_box(void *entity, int ent_index)
     
     if (config.esp.player_bounding_box)
     {
-        draw_set_color(255, 255, 255, 255);
-        draw_filled_rect(box.left, box.top, box.right, box.bottom);
+        draw_outlined_box(box, 255, 255, 255, 255);
     }
 
     if (config.esp.player_health_bar)
@@ -44,19 +43,19 @@ void draw_2d_box(void *entity, int ent_index)
         float bar_height = (float)height * ((float)health / (float)max_health);
         
         // Health bar + background
-        draw_set_color(0, 0, 0, 255);
-        draw_filled_rect(box.right + 1, box.bottom - bar_height, box.right + 4, box.bottom);
+        draw_set_color(0, 0, 0, 255 / 2);
+        draw_filled_rect(box.right + 1, box.bottom - height, box.right + 4, box.bottom);
         draw_set_color(0, 255, 0, 255);
-        draw_filled_rect(box.right + 2, box.bottom - bar_height + 1, box.right + 3, box.bottom - 1);
+        draw_outlined_rect(box.right + 2, box.bottom - bar_height + 1, box.right + 3, box.bottom - 1);
 
         // Overheal + background
         if (over_heal > 0)
         {
             float over_heal_height = (float)height * ((float)over_heal / (float)max_health);
             draw_set_color(0, 0, 0, 255);
-            draw_filled_rect(box.right + 5, box.bottom - over_heal_height, box.right + 8, box.bottom);
+            draw_outlined_rect(box.right + 5, box.bottom - over_heal_height, box.right + 8, box.bottom);
             draw_set_color(65, 105, 225, 255);
-            draw_filled_rect(box.right + 6, box.bottom - over_heal_height + 1, box.right + 7, box.bottom - 1);
+            draw_outlined_rect(box.right + 6, box.bottom - over_heal_height + 1, box.right + 7, box.bottom - 1);
         }
     }
 

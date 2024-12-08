@@ -27,6 +27,15 @@ void draw_filled_rect(int x0, int y0, int x1, int y1)
 {
     void **vtable = *(void ***)interface;
 
+    void (*func)(void *, int, int, int, int) = vtable[12];
+
+    func(interface, x0, y0, x1, y1);
+}
+
+void draw_outlined_rect(int x0, int y0, int x1, int y1)
+{
+    void **vtable = *(void ***)interface;
+
     void (*func)(void *, int, int, int, int) = vtable[14];
 
     func(interface, x0, y0, x1, y1);
