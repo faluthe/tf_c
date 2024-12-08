@@ -40,12 +40,15 @@ void draw_2d_box(void *entity, int ent_index)
         int max_health = get_ent_max_health(entity);
         int health = get_ent_health(entity) > max_health ? max_health : get_ent_health(entity);
         int over_heal = get_ent_health(entity) - max_health;
-        float bar_height = (float)height * ((float)health / (float)max_health);
+        float health_percentage = (float)health / (float)max_health;
+        float bar_height = (float)height * health_percentage;
         
         // Health bar + background
         draw_set_color(0, 0, 0, 255 / 2);
         draw_filled_rect(box.right + 1, box.bottom - height, box.right + 4, box.bottom);
-        draw_set_color(0, 255, 0, 255);
+        int green = fmin(health_percentage * 2 * 255, 255);
+        int red = fmin((1 - health_percentage) * 2 * 255, 255);
+        draw_set_color(red, green, 0, 255);
         draw_outlined_rect(box.right + 2, box.bottom - bar_height + 1, box.right + 3, box.bottom - 1);
 
         // Overheal + background

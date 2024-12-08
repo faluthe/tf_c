@@ -19,7 +19,7 @@ __int64_t (*paint_traverse_original)(void *, void *, __int8_t, __int8_t) = NULL;
 // TBD: Fix for scoped weapons
 void draw_aimbot_fov()
 {
-    if (!is_in_game())
+    if (!config.aimbot.draw_fov || !is_in_game())
     {
         return;
     }
@@ -34,9 +34,14 @@ void draw_aimbot_fov()
     int w, h;
     get_screen_size(&w, &h);
 
-    int radius = tan(config.aimbot_fov / 180 * M_PI) / tan((90.0f / 2) / 180 * M_PI) * (w / 2);
+    int radius = tan(config.aimbot.fov / 180 * M_PI) / tan((90.0f / 2) / 180 * M_PI) * (w / 2);
 
-    draw_set_color(0, 0, 255, 255);
+    draw_set_color(
+        config.aimbot.fov_color.r * 255.0f,
+        config.aimbot.fov_color.g * 255.0f, 
+        config.aimbot.fov_color.b * 255.0f, 
+        config.aimbot.fov_color.a * 255.0f
+    );
     draw_circle(w / 2, h /2, radius, 255);
 }
 
@@ -50,7 +55,7 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     if (!hooked)
     {
         esp_font = text_create_font();
-        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 14, 250, 0, 0, 0x90);
+        text_set_font_glyph_set(esp_font, "ProggySquare", 14, 400, 0, 0, 0x0);
 
         init_render_queue();
 

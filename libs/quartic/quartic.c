@@ -2,8 +2,6 @@
  * Algorithms by Ferrari, Tartaglia, Cardano, et al. (16th century Italy)
  */
 
-#include "math_utils.h"
-
 #define _USE_MATH_DEFINES
 #include <math.h>
 

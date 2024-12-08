@@ -1,4 +1,5 @@
 #include "../../config/config.h"
+#include "../../libs/quartic/quartic.h"
 #include "../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/entity/weapon_entity.h"
@@ -228,7 +229,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             struct vec3_t new_view_angle = get_view_angle(ent_difference);
             float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-            if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
+            if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
             {
                 target_ent = entity;
                 smallest_fov_angle = fov_distance;
@@ -311,7 +312,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                     
                     float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                    if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
+                    if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                     {
                         target_ent = entity;
                         target_predicted_time = predicted_time;
@@ -344,7 +345,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 struct vec3_t new_view_angle = get_view_angle(ent_difference);
                 float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
@@ -418,7 +419,7 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
         float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
     
-        if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
+        if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
         {
             target_ent = entity;
             smallest_fov_angle = fov_distance;
@@ -449,7 +450,7 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
                 struct vec3_t new_view_angle = get_view_angle(ent_difference);
                 float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance <= config.aimbot_fov && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
@@ -478,6 +479,11 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
 void aimbot(void *localplayer, struct user_cmd *user_cmd)
 {
+    if (!config.aimbot.aimbot_enabled)
+    {
+        return;
+    }
+
     void *active_weapon = get_client_entity(get_active_weapon(localplayer));
     if (active_weapon == NULL)
     {

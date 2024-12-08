@@ -7,6 +7,7 @@ Work in Progress TF2 GNU Linux Dynamic Library.
 - `libx11-dev`
 - `libglew-dev` (2.1, [see below](#runtime-environment))
 - `libsdl2-dev`
+- `ProggySquare.tff` (Download [here](https://github.com/bluescan/proggyfonts/blob/master/ProggyOriginal/ProggySquare.ttf))
 
 ### Runtime Environment
 The Steam Runtime Environment containerizes Team Fortress for portability and compatibility between distros. The runtime uses Linux namespaces to build a predictable environment. You can read more [here](https://gitlab.steamos.cloud/steamrt/steam-runtime-tools/-/blob/main/docs/container-runtime.md#steam-linux-runtime-30-sniper). What this means for us is that we must match the versions and paths of the libraries we link with against the versions and paths present in the container's namespace.

@@ -1,8 +1,16 @@
+#include "../libs/nuklear/nuklear.h"
+
 #include <stdbool.h>
 
 struct config
 {
-    float aimbot_fov;
+    struct
+    {
+        int aimbot_enabled;
+        int draw_fov;
+        float fov;
+        struct nk_colorf fov_color;
+    } aimbot;
     struct
     {
         // Player ESP

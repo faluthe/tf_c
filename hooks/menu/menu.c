@@ -14,9 +14,24 @@ void watermark(struct nk_context *ctx)
 
 void draw_aim_tab(struct nk_context *ctx)
 {
-    nk_layout_row_dynamic(ctx, 20, 4);
-    nk_label(ctx, "Aimbot FOV", NK_TEXT_LEFT);
-    nk_slider_float(ctx, 1.0f, &config.aimbot_fov, 50.0f, 1.0f);
+    nk_layout_row_dynamic(ctx, 20, 1);
+    nk_checkbox_label(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Aimbot FOV:", NK_TEXT_LEFT);
+    nk_slider_float(ctx, 1.0f, &config.aimbot.fov, 50.0f, 1.0f);
+    
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_checkbox_label(ctx, "Draw FOV", &config.aimbot.draw_fov);
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "FOV color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.fov_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.fov_color = nk_color_picker(ctx, config.aimbot.fov_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
 }
 
 void draw_esp_tab(struct nk_context *ctx)
@@ -76,7 +91,6 @@ void draw_menu(struct nk_context *ctx)
             nk_layout_row_dynamic(ctx, 30, 3);
             if (nk_button_label(ctx, "Aim"))
             {
-                log_msg("Button presed\n");
                 tab = 0;
             }
 
