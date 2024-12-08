@@ -267,7 +267,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 get_bone_pos(entity, get_head_bone(entity)),
             };
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 3; i++)
             {
                 struct vec3_t ent_difference = get_difference(ent_pos[i], local_pos);
                 
@@ -319,6 +319,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                         smallest_fov_angle = fov_distance;
                         projectile_target_view_angle = rocket_view_angle;
                         projectile_target_pos = rocket_predicted_pos;
+                        break;
                     }
                 }
             }
