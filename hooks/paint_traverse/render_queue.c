@@ -35,7 +35,7 @@ struct timer_t
 struct render_data_t render_queue[RENDER_QUEUE_SIZE];
 struct bbox_decorator_t bbox_queue[RENDER_QUEUE_SIZE];
 struct timer_t timer_queue[RENDER_QUEUE_SIZE];
-pthread_mutex_t render_queue_mutex = {0};
+pthread_mutex_t render_queue_mutex = { 0 };
 
 void init_render_queue()
 {
