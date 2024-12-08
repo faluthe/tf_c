@@ -49,16 +49,16 @@ void draw_2d_box(void *entity, int ent_index)
         int green = fmin(health_percentage * 2 * 255, 255);
         int red = fmin((1 - health_percentage) * 2 * 255, 255);
         draw_set_color(red, green, 0, 255);
-        draw_outlined_rect(box.right + 2, box.bottom - bar_height + 1, box.right + 3, box.bottom - 1);
+        draw_filled_rect(box.right + 2, box.bottom - bar_height + 1, box.right + 3, box.bottom - 1);
 
         // Overheal + background
         if (over_heal > 0)
         {
             float over_heal_height = (float)height * ((float)over_heal / (float)max_health);
             draw_set_color(0, 0, 0, 255);
-            draw_outlined_rect(box.right + 5, box.bottom - over_heal_height, box.right + 8, box.bottom);
+            draw_filled_rect(box.right + 5, box.bottom - over_heal_height, box.right + 8, box.bottom);
             draw_set_color(65, 105, 225, 255);
-            draw_outlined_rect(box.right + 6, box.bottom - over_heal_height + 1, box.right + 7, box.bottom - 1);
+            draw_filled_rect(box.right + 6, box.bottom - over_heal_height + 1, box.right + 7, box.bottom - 1);
         }
     }
 

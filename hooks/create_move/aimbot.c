@@ -188,17 +188,16 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     // Draw where a rocket was previously shot
     static struct vec3_t esp_projectile_pos = {0.0f, 0.0f, 0.0f};
     static float esp_predicted_time = 0.0f;
-    const float projectile_esp_linger = 0.5f;
+    static float shoot_time = 0.0f;
+    const float projectile_esp_linger = 0.0f;
     if (esp_projectile_pos.x != 0.0f && esp_projectile_pos.y != 0.0f && esp_projectile_pos.z != 0.0f)
     {
         struct vec3_t projectile_predicted_screen;
         if (screen_position(&esp_projectile_pos, &projectile_predicted_screen) == 0)
         {
             float curtime = get_global_vars_curtime();
-            float time_diff = esp_predicted_time - curtime;
-            struct vec3_t color = time_diff > 0.0f ? (struct vec3_t) {75, 169, 200} : (struct vec3_t) {255, 75, 75};
-            float data = time_diff > 0.0f ? time_diff : 0.0f;
-            add_to_render_queue(L"rocket", (int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, color, data);
+            add_timer((int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, (struct vec3_t){0, 0, 255}, curtime, shoot_time, esp_predicted_time);
+
             if (curtime > esp_predicted_time + projectile_esp_linger)
             {
                 esp_projectile_pos = (struct vec3_t){0.0f, 0.0f, 0.0f};
@@ -383,6 +382,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
         esp_predicted_time = get_global_vars_curtime() + target_predicted_time;
+        shoot_time = get_global_vars_curtime();
     }
 
     movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
