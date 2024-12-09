@@ -4,9 +4,8 @@ Work in Progress TF2 GNU Linux Dynamic Library.
 ### Dependencies:
 - `gdb`
 - `gcc`
-- `libx11-dev`
-- `libglew-dev` (2.1, [see below](#runtime-environment))
 - `libsdl2-dev`
+- `libglew-dev` (2.1, [see below](#runtime-environment))
 - `ProggySquare.tff` (Download [here](https://github.com/bluescan/proggyfonts/blob/master/ProggyOriginal/ProggySquare.ttf))
 
 ### Runtime Environment
