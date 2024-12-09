@@ -64,8 +64,12 @@ void multi_select_combo_box(struct nk_context *ctx, const char **options, int op
 
 void draw_aim_tab(struct nk_context *ctx)
 {
-    nk_layout_row_dynamic(ctx, 20, 1);
+    nk_layout_row_dynamic(ctx, 20, 2);
     nk_checkbox_label(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
+    if (config.aimbot.aimbot_enabled)
+    {
+        nk_checkbox_label(ctx, "Use aim key", &config.aimbot.key.use_key);
+    }
 
     nk_layout_row_dynamic(ctx, 20, 2);
     char fov_text[32];

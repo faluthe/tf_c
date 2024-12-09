@@ -368,7 +368,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
     if (config.aimbot.key.use_key && config.aimbot.key.is_pressed) user_cmd->buttons |= 1;
 
-    if (((config.aimbot.key.use_key && config.aimbot.key.is_pressed) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
+    if (((config.aimbot.key.use_key && config.aimbot.key.is_pressed) || (!config.aimbot.key.use_key && user_cmd->buttons & 1) != 0) && can_attack(localplayer))
     {
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
