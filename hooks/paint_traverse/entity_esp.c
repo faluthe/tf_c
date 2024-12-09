@@ -92,14 +92,20 @@ void draw_entity_esp()
             continue;
         }
 
-        if ((class_id == DISPENSER && team == local_team) || (class_id == DISPENSER && !(config.esp.dispenser_name || config.esp.dispenser_bounding_box)))
+        if (class_id == DISPENSER && team == local_team)
         {
-            continue;
+            if (!(config.esp.dispenser_name || config.esp.dispenser_bounding_box))
+            {
+                continue;
+            }
         }
 
-        if ((class_id == DISPENSER && team != local_team) || (class_id == DISPENSER && !(config.esp.friendly_dispenser_name || config.esp.friendly_dispenser_bounding_box)))
+        if (class_id == DISPENSER && team != local_team)
         {
-            continue;
+            if (!(config.esp.friendly_dispenser_name || config.esp.friendly_dispenser_bounding_box))
+            {
+                continue;
+            }
         }
 
         struct bounding_box box = get_ent_2d_box(entity);
@@ -175,16 +181,30 @@ void draw_entity_esp()
 
                 break;
             case DISPENSER:
-                if (config.esp.dispenser_name)
+                if (team == local_team)
                 {
-                    draw_print_text(class_name_w, wcslen(class_name_w));
-                }
+                    if (config.esp.friendly_dispenser_name)
+                    {
+                        draw_print_text(class_name_w, wcslen(class_name_w));
+                    }
 
-                if (config.esp.dispenser_bounding_box)
+                    if (config.esp.friendly_dispenser_bounding_box)
+                    {
+                        draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
+                    }
+                }
+                else
                 {
-                    draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
-                }
+                    if (config.esp.dispenser_name)
+                    {
+                        draw_print_text(class_name_w, wcslen(class_name_w));
+                    }
 
+                    if (config.esp.dispenser_bounding_box)
+                    {
+                        draw_outlined_box(box, box_color.x, box_color.y, box_color.z, 255);
+                    }
+                }
                 break;
             default:
                 draw_print_text(class_name_w, wcslen(class_name_w));
