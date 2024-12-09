@@ -3,7 +3,6 @@
 #include "hooks/paint_traverse/paint_traverse.h"
 #include "interfaces/interfaces.h"
 #include "source_sdk/estimate_abs_velocity/estimate_abs_velocity.h"
-#include "x11/x11.h"
 #include "utils/utils.h"
 
 #include <stdio.h>
@@ -28,12 +27,6 @@ __attribute__((constructor)) void init()
     {
         log_msg("Failed to initialize interfaces\n");
         return;
-    }
-
-    if (!init_x11())
-    {
-        log_msg("Failed to initialize X11\n");
-	    return;
     }
     
     if (!init_estimate_abs_velocity())

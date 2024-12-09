@@ -1,3 +1,4 @@
+#include "../../config/config.h"
 #include "../../source_sdk/surface/surface.h"
 #include "../../utils/utils.h"
 #include "../hooks.h"
@@ -8,6 +9,7 @@
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
 
+// These defines need to be included everywhere nuklear's headers are included
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_STANDARD_VARARGS
@@ -15,6 +17,7 @@
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_INCLUDE_FONT_BAKING
 #define NK_INCLUDE_DEFAULT_FONT
+// This should only be included in this file
 #define NK_IMPLEMENTATION
 #define NK_SDL_GL3_IMPLEMENTATION
 #include "../../libs/nuklear/nuklear.h"
@@ -98,6 +101,21 @@ int poll_event_hook(SDL_Event *event)
     if (ret && nk_sdl_handle_event(event) && menu_focused)
     {
         event->type = 0;
+
+        return ret;
+    }
+
+    if (config.aimbot.key.is_mouse_btn)
+    {
+        Uint32 mouse_state = SDL_GetMouseState(NULL, NULL);
+        if (mouse_state & SDL_BUTTON(config.aimbot.key.code))
+        {
+            config.aimbot.key.is_pressed = true;
+        }
+        else
+        {
+            config.aimbot.key.is_pressed = false;
+        }
     }
 
     return ret;

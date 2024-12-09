@@ -1,3 +1,10 @@
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
 #include "../libs/nuklear/nuklear.h"
 
 #include <stdbool.h>
@@ -10,6 +17,13 @@ struct config
         int draw_fov;
         float fov;
         struct nk_colorf fov_color;
+        struct
+        {
+            int use_key;
+            int code;
+            int is_mouse_btn;
+            bool is_pressed;
+        } key;
     } aimbot;
     struct
     {
