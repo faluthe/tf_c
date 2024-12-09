@@ -49,3 +49,4 @@ struct config
 extern struct config config;
 
 bool init_config();
+bool save_config();

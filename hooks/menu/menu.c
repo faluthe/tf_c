@@ -142,8 +142,35 @@ void draw_esp_tab(struct nk_context *ctx)
 
 void draw_misc_tab(struct nk_context *ctx)
 {
-    nk_layout_row_dynamic(ctx, 30, 1);
+    nk_layout_row_dynamic(ctx, 20, 1);
     nk_checkbox_label(ctx, "Bunny hop", &config.bunny_hop);
+
+    nk_layout_row_dynamic(ctx, 20, 1);
+    if (nk_button_label(ctx, "Save config"))
+    {
+        if (!save_config())
+        {
+            log_msg("Failed to save config\n");
+        }
+        else
+        {
+            log_msg("Config saved\n");
+        }
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 1);
+    if (nk_button_label(ctx, "Load config"))
+    {
+        log_msg("Loading config\n");
+        if (!init_config())
+        {
+            log_msg("Failed to save config\n");
+        }
+        else
+        {
+            log_msg("Config loaded\n");
+        }
+    }
 }
 
 void draw_tab(struct nk_context *ctx, const char *name, int *tab, int index)
@@ -160,6 +187,7 @@ void draw_tab(struct nk_context *ctx, const char *name, int *tab, int index)
     {
         *tab = index;
     }
+    ctx->style.button.normal.data.color = nk_rgb(50, 50, 50);
 }
 
 void draw_menu(struct nk_context *ctx)

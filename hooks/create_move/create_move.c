@@ -55,7 +55,8 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     if (silent_aim)
     {
         return false;
-    } else
+    } 
+    else
     {
         return rc;
     }

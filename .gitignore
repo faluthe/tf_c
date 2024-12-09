@@ -7,3 +7,6 @@ tf_c.so
 
 # Emacs tilde files
 *~
+
+# Config files
+*.tf_c.bin
