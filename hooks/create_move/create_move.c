@@ -1,3 +1,4 @@
+#include "../../config/config.h"
 #include "../../utils/utils.h"
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/entity/entity.h"
@@ -46,7 +47,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     }
 
     // If player is not on ground unset jump button flag (breaks scout double jump)
-    if ((get_ent_flags(localplayer) & 1) == 0)
+    if ((get_ent_flags(localplayer) & 1) == 0 && config.bunny_hop)
     {
         user_cmd->buttons &= ~2;
     }
@@ -54,7 +55,8 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     if (silent_aim)
     {
         return false;
-    } else
+    } 
+    else
     {
         return rc;
     }

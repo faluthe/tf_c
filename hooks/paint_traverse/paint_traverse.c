@@ -1,7 +1,11 @@
+#include "../../config/config.h"
+#include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/surface/surface.h"
 #include "../../source_sdk/panel/panel.h"
+#include "../../utils/utils.h"
 #include "paint_traverse.h"
 
+#include <math.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -11,6 +15,35 @@
 
 // extern
 __int64_t (*paint_traverse_original)(void *, void *, __int8_t, __int8_t) = NULL;
+
+// TBD: Fix for scoped weapons
+void draw_aimbot_fov()
+{
+    if (!config.aimbot.draw_fov || !is_in_game())
+    {
+        return;
+    }
+
+    void *localplayer = get_localplayer();
+
+    if (!localplayer || get_ent_lifestate(localplayer) != true)
+    {
+        return;
+    }
+
+    int w, h;
+    get_screen_size(&w, &h);
+
+    int radius = tan(config.aimbot.fov / 180 * M_PI) / tan((90.0f / 2) / 180 * M_PI) * (w / 2);
+
+    draw_set_color(
+        config.aimbot.fov_color.r * 255.0f,
+        config.aimbot.fov_color.g * 255.0f, 
+        config.aimbot.fov_color.b * 255.0f, 
+        config.aimbot.fov_color.a * 255.0f
+    );
+    draw_circle(w / 2, h /2, radius, 255);
+}
 
 void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8_t allow_force)
 {
@@ -22,7 +55,7 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     if (!hooked)
     {
         esp_font = text_create_font();
-        text_set_font_glyph_set(esp_font, "Tahoma Monospace", 17, 700, 0, 0, 0x80);
+        text_set_font_glyph_set(esp_font, "ProggySquare", 14, 400, 0, 0, 0x0);
 
         init_render_queue();
 
@@ -37,11 +70,10 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     }
 
     draw_set_text_font(esp_font);
-    draw_set_text_color(255, 255, 255, 255);
-    draw_set_text_pos(50, 50);
-    draw_print_text(L"TF_C", 4);
 
     draw_player_esp();
     draw_entity_esp();
     draw_render_queue();
+    draw_timer_queue();
+    draw_aimbot_fov();
 }

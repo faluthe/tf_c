@@ -9,3 +9,4 @@ struct bounding_box
 
 struct bounding_box get_ent_2d_box(void *entity);
 bool is_good_box(struct bounding_box box);
+void draw_outlined_box(struct bounding_box box, int r, int g, int b, int a);

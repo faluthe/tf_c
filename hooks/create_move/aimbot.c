@@ -1,3 +1,5 @@
+#include "../../config/config.h"
+#include "../../libs/quartic/quartic.h"
 #include "../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/entity/weapon_entity.h"
@@ -11,7 +13,6 @@
 #include "../../source_sdk/user_cmd.h"
 #include "../../utils/math/math_utils.h"
 #include "../../utils/utils.h"
-#include "../../x11/x11.h"
 #include "../paint_traverse/paint_traverse.h"
 #include "../hooks.h"
 
@@ -19,9 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-
-static bool hold_shot = false;
-static bool use_aim_key = false;
 
 float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_distance, bool ent_in_air, int rocket_speed_per_second)
 {
@@ -149,6 +147,22 @@ void movement_fix(struct user_cmd *user_cmd, struct vec3_t original_view_angle, 
     user_cmd->sidemove = sin((yaw_delta) * (M_PI/180)) * original_forward_move + sin((yaw_delta + 90.f) * (M_PI/180)) * original_side_move;
 }
 
+float get_fov(struct vec3_t view_angle, struct vec3_t target_view_angle)
+{
+    float x_diff = target_view_angle.x - view_angle.x;
+    float y_diff = target_view_angle.y - view_angle.y;
+
+    float x = remainderf(x_diff, 360.0f);
+    float y = remainderf(y_diff, 360.0f);
+
+    float clamped_x = x > 89.0f ? 89.0f : x < -89.0f ? -89.0f : x;
+    float clamped_y = y > 180.0f ? 180.0f : y < -180.0f ? -180.0f : y;
+
+    float fov = hypotf(clamped_x, clamped_y);
+
+    return fov;
+}
+
 void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_id)
 {
     struct vec3_t original_view_angle = user_cmd->viewangles;
@@ -170,17 +184,16 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     // Draw where a rocket was previously shot
     static struct vec3_t esp_projectile_pos = {0.0f, 0.0f, 0.0f};
     static float esp_predicted_time = 0.0f;
-    const float projectile_esp_linger = 0.5f;
+    static float shoot_time = 0.0f;
+    const float projectile_esp_linger = 0.0f;
     if (esp_projectile_pos.x != 0.0f && esp_projectile_pos.y != 0.0f && esp_projectile_pos.z != 0.0f)
     {
         struct vec3_t projectile_predicted_screen;
         if (screen_position(&esp_projectile_pos, &projectile_predicted_screen) == 0)
         {
             float curtime = get_global_vars_curtime();
-            float time_diff = esp_predicted_time - curtime;
-            struct vec3_t color = time_diff > 0.0f ? (struct vec3_t) {75, 169, 200} : (struct vec3_t) {255, 75, 75};
-            float data = time_diff > 0.0f ? time_diff : 0.0f;
-            add_to_render_queue(L"rocket", (int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, color, data);
+            add_timer((int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, (struct vec3_t){0, 0, 255}, curtime, shoot_time, esp_predicted_time);
+
             if (curtime > esp_predicted_time + projectile_esp_linger)
             {
                 esp_projectile_pos = (struct vec3_t){0.0f, 0.0f, 0.0f};
@@ -208,14 +221,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
         if (is_ent_visible(localplayer, entity))
         {
-            float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-            float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+            struct vec3_t new_view_angle = get_view_angle(ent_difference);
+            float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-            if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+            if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
             {
                 target_ent = entity;
                 smallest_fov_angle = fov_distance;
-                projectile_target_view_angle = get_view_angle(ent_difference);
+                projectile_target_view_angle = new_view_angle;
                 projectile_target_pos = ent_pos;
             }
         }
@@ -249,7 +262,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 get_bone_pos(entity, get_head_bone(entity)),
             };
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 3; i++)
             {
                 struct vec3_t ent_difference = get_difference(ent_pos[i], local_pos);
                 
@@ -289,19 +302,19 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 // TODO: Check if the rocket is going to hit a wall
                 if (is_pos_visible(localplayer, rocket_predicted_pos))
                 {
-                    struct vec3_t target_view_angle = get_view_angle(ent_difference);
-                    struct vec3_t new_view_angle = get_view_angle(get_difference(rocket_predicted_pos, local_pos));
+                    struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                    struct vec3_t rocket_view_angle = get_view_angle(get_difference(rocket_predicted_pos, local_pos));
                     
-                    float ent_distance = get_distance(ent_pos[i], local_pos);
-                    float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - target_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - target_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
+                    float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                    if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                    if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                     {
                         target_ent = entity;
                         target_predicted_time = predicted_time;
                         smallest_fov_angle = fov_distance;
-                        projectile_target_view_angle = new_view_angle;
+                        projectile_target_view_angle = rocket_view_angle;
                         projectile_target_pos = rocket_predicted_pos;
+                        break;
                     }
                 }
             }
@@ -325,14 +338,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
             if (is_ent_visible(localplayer, entity))
             {
-                float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-                float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+                struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
-                    projectile_target_view_angle = get_view_angle(ent_difference);
+                    projectile_target_view_angle = new_view_angle;
                     projectile_target_pos = ent_pos;
                 }
             }
@@ -341,11 +354,6 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
     if (target_ent == NULL)
     {
-        if (hold_shot)
-        {
-            user_cmd->buttons &= ~1;
-        }
-
         return;
     }
 
@@ -358,13 +366,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         add_to_render_queue(L"V", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){207, 115, 54}, 0.0f);
     }
 
-    if (use_aim_key && is_key_down('c')) user_cmd->buttons |= 1;
+    if (config.aimbot.key.use_key && config.aimbot.key.is_pressed) user_cmd->buttons |= 1;
 
-    if (((use_aim_key && is_key_down('c')) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
+    if (((config.aimbot.key.use_key && config.aimbot.key.is_pressed) || (!config.aimbot.key.use_key && user_cmd->buttons & 1) != 0) && can_attack(localplayer))
     {
         user_cmd->viewangles = projectile_target_view_angle;
         esp_projectile_pos = projectile_target_pos;
         esp_predicted_time = get_global_vars_curtime() + target_predicted_time;
+        shoot_time = get_global_vars_curtime();
     }
 
     movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
@@ -400,10 +409,9 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
         struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
         struct vec3_t new_view_angle = get_view_angle(ent_difference);
 
-        float ent_distance = get_distance(ent_pos, local_pos);
-        float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - new_view_angle.x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - new_view_angle.y) * (M_PI / 180)) * ent_distance, 2.0));
+        float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
     
-        if (fov_distance < smallest_fov_angle)
+        if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
         {
             target_ent = entity;
             smallest_fov_angle = fov_distance;
@@ -431,14 +439,14 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
             if (is_ent_visible(localplayer, entity))
             {
-                float ent_distance = get_distance(ent_pos, get_ent_eye_pos(localplayer));
-                float fov_distance = sqrt(powf(sin((user_cmd->viewangles.x - get_view_angle(ent_difference).x) * (M_PI / 180) ) * ent_distance, 2.0) + powf(sin((user_cmd->viewangles.y - get_view_angle(ent_difference).y) * (M_PI / 180)) * ent_distance, 2.0));
+                struct vec3_t new_view_angle = get_view_angle(ent_difference);
+                float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
 
-                if (fov_distance < 4*90 && fov_distance < smallest_fov_angle)
+                if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
                 {
                     target_ent = entity;
                     smallest_fov_angle = fov_distance;
-                    target_view_angle = get_view_angle(ent_difference);
+                    new_view_angle = new_view_angle;
                 }
             }
         }
@@ -451,9 +459,9 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
 
-    if (use_aim_key && is_key_down('c')) user_cmd->buttons |= 1;
+    if (config.aimbot.key.use_key && config.aimbot.key.is_pressed) user_cmd->buttons |= 1;
     
-    if (((use_aim_key && is_key_down('c')) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
+    if (((config.aimbot.key.use_key && config.aimbot.key.is_pressed) || (user_cmd->buttons & 1) != 0) && can_attack(localplayer))
     {
         user_cmd->viewangles = target_view_angle;
     }
@@ -463,6 +471,11 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
 
 void aimbot(void *localplayer, struct user_cmd *user_cmd)
 {
+    if (!config.aimbot.aimbot_enabled)
+    {
+        return;
+    }
+
     void *active_weapon = get_client_entity(get_active_weapon(localplayer));
     if (active_weapon == NULL)
     {

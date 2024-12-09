@@ -27,6 +27,15 @@ void draw_filled_rect(int x0, int y0, int x1, int y1)
 {
     void **vtable = *(void ***)interface;
 
+    void (*func)(void *, int, int, int, int) = vtable[12];
+
+    func(interface, x0, y0, x1, y1);
+}
+
+void draw_outlined_rect(int x0, int y0, int x1, int y1)
+{
+    void **vtable = *(void ***)interface;
+
     void (*func)(void *, int, int, int, int) = vtable[14];
 
     func(interface, x0, y0, x1, y1);
@@ -84,4 +93,22 @@ void draw_print_text(const wchar_t *text, int text_len)
     void (*func)(void *, const wchar_t *, int, int) = vtable[22];
 
     func(interface, text, text_len, 0);
+}
+
+void set_cursor_visible(bool visible)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, bool) = vtable[52];
+
+    func(interface, visible);
+}
+
+void draw_circle(int x, int y, int radius, int segments)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, int, int, int, int) = vtable[99];
+
+    func(interface, x, y, radius, segments);
 }

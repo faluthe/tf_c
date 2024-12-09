@@ -1,6 +1,7 @@
 #include "../../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../../source_sdk/entity/entity.h"
 #include "../../../source_sdk/math/vec3.h"
+#include "../../../source_sdk/surface/surface.h"
 #include "esp_util.h"
 
 #include <stdbool.h>
@@ -65,4 +66,13 @@ struct bounding_box get_ent_2d_box(void *entity)
 bool is_good_box(struct bounding_box box)
 {
     return box.left != 0 && box.top != 0 && box.right != 0 && box.bottom != 0;
+}
+
+void draw_outlined_box(struct bounding_box box, int r, int g, int b, int a)
+{
+    draw_set_color(0, 0, 0, 255);
+    draw_outlined_rect(box.left - 1, box.top - 1, box.right + 1, box.bottom + 1);
+    draw_outlined_rect(box.left + 1, box.top + 1, box.right - 1, box.bottom - 1);
+    draw_set_color(r, g, b, a);
+    draw_outlined_rect(box.left, box.top, box.right, box.bottom);
 }
