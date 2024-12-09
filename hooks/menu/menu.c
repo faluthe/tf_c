@@ -140,6 +140,12 @@ void draw_esp_tab(struct nk_context *ctx)
     multi_select_combo_box(ctx, entity_esp_options, 2, friendly_dispenser_selections, 2, friendly_dispenser_preview_text, sizeof(friendly_dispenser_preview_text));
 }
 
+void draw_misc_tab(struct nk_context *ctx)
+{
+    nk_layout_row_dynamic(ctx, 30, 1);
+    nk_checkbox_label(ctx, "Bunny hop", &config.bunny_hop);
+}
+
 void draw_tab(struct nk_context *ctx, const char *name, int *tab, int index)
 {
     if (*tab == index)
@@ -176,8 +182,7 @@ void draw_menu(struct nk_context *ctx)
                     draw_esp_tab(ctx);
                     break;
                 case 2:
-                    nk_layout_row_dynamic(ctx, 30, 1);
-                    nk_label(ctx, "Misc tab", NK_TEXT_CENTERED);
+                    draw_misc_tab(ctx);
                     break;
             }
         }

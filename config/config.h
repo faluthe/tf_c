@@ -11,6 +11,7 @@
 
 struct config
 {
+    int bunny_hop;
     struct
     {
         int aimbot_enabled;

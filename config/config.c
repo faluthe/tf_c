@@ -9,6 +9,7 @@ bool init_config()
     config.aimbot.key.is_pressed = false;
 
     // TBD: Read config from file
+    config.bunny_hop = 1;
     config.aimbot.aimbot_enabled = 1;
     config.aimbot.draw_fov = 1;
     config.aimbot.fov = 10.0f;
