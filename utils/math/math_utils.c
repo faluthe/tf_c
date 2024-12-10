@@ -91,3 +91,20 @@ void angle_vectors(struct vec3_t angles, struct vec3_t *forward, struct vec3_t *
         up->z = cr * cp;
     }
 }
+
+struct vec3_t get_view_angle(struct vec3_t diff)
+{
+    // Common side between two right triangles
+    float c = sqrt((diff.x * diff.x) + (diff.y * diff.y));
+
+    float pitch_angle = atan2(diff.z, c) * 180 / M_PI;
+    float yaw_angle = atan2(diff.y, diff.x) * 180 / M_PI;
+
+    struct vec3_t view_angle = {
+        .x = -pitch_angle,
+        .y = yaw_angle,
+        .z = 0
+    };
+
+    return view_angle;
+}

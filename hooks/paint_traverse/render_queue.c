@@ -1,3 +1,5 @@
+#include "../../source_sdk/debug_overlay/debug_overlay.h"
+#include "../../source_sdk/global_vars/global_vars.h"
 #include "../../source_sdk/surface/surface.h"
 #include "../../source_sdk/math/vec3.h"
 #include "../../utils/utils.h"
@@ -24,10 +26,8 @@ struct bbox_decorator_t
 
 struct timer_t
 {
-    int x;
-    int y;
+    struct vec3_t world_pos;
     struct vec3_t color;
-    float curtime;
     float starttime;
     float endtime;
 };
@@ -43,7 +43,7 @@ void init_render_queue()
 
     for (int i = 0; i < RENDER_QUEUE_SIZE; i++)
     {
-        timer_queue[i].curtime = -1.0f;
+        timer_queue[i].starttime = -1.0f;
     }
 }
 
@@ -85,18 +85,17 @@ void add_bbox_decorator(const wchar_t *text, struct vec3_t color, void *entity)
     pthread_mutex_unlock(&render_queue_mutex);
 }
 
-void add_timer(int x, int y, struct vec3_t color, float curtime, float starttime, float endtime)
+// Called once, others are all per frame
+void add_timer(struct vec3_t world_pos, struct vec3_t color, float starttime, float endtime)
 {
     pthread_mutex_lock(&render_queue_mutex);
 
     for (int i = 0; i < RENDER_QUEUE_SIZE; i++)
     {
-        if (timer_queue[i].curtime < 0.0f)
+        if (timer_queue[i].starttime < 0.0f)
         {
-            timer_queue[i].x = x;
-            timer_queue[i].y = y;
+            timer_queue[i].world_pos = world_pos;
             timer_queue[i].color = color;
-            timer_queue[i].curtime = curtime;
             timer_queue[i].starttime = starttime;
             timer_queue[i].endtime = endtime;
             break;
@@ -151,19 +150,32 @@ void draw_bbox_decorators(int start_x, int start_y, void *entity)
 
 void draw_timer_queue()
 {
+    static const float linger_time = 0.5f;
     pthread_mutex_lock(&render_queue_mutex);
 
     for (int i = 0; i < RENDER_QUEUE_SIZE; i++)
     {
-        if (timer_queue[i].curtime >= 0.0f)
+        if (timer_queue[i].starttime >= 0.0f)
         {
+            struct vec3_t screen_pos;
+            if (screen_position(&timer_queue[i].world_pos, &screen_pos) != 0)
+            {
+                continue;
+            }
+
             draw_set_color(0, 0, 0, 255 / 2);
-            draw_filled_rect(timer_queue[i].x - 50, timer_queue[i].y, timer_queue[i].x + 50, timer_queue[i].y + 3);
+            draw_filled_rect(screen_pos.x - 50, screen_pos.y, screen_pos.x + 50, screen_pos.y + 3);
 
             draw_set_color(timer_queue[i].color.x, timer_queue[i].color.y, timer_queue[i].color.z, 255);
 
             // Calculate the reverse progress (remaining time fraction)
-            float progress = (timer_queue[i].endtime - timer_queue[i].curtime) / (timer_queue[i].endtime - timer_queue[i].starttime);
+            float progress = (timer_queue[i].endtime - get_global_vars_curtime()) / (timer_queue[i].endtime - timer_queue[i].starttime);
+
+            if (progress <= 0.0f - linger_time)
+            {
+                timer_queue[i].starttime = -1.0f;
+                continue;
+            }
 
             // Ensure progress is clamped between 0 and 1
             if (progress < 0.0f) 
@@ -179,7 +191,7 @@ void draw_timer_queue()
             float x_len = 100 * progress;
 
             // Draw the rectangle, starting at the right and shrinking toward the left
-            draw_filled_rect(timer_queue[i].x - 50 + 1, timer_queue[i].y + 1, timer_queue[i].x - 50 + x_len, timer_queue[i].y + 2);
+            draw_filled_rect(screen_pos.x - 50 + 1, screen_pos.y + 1, screen_pos.x - 50 + x_len, screen_pos.y + 2);
         }
     }
 
@@ -194,7 +206,6 @@ void clear_render_queue()
     {
         render_queue[i].text = NULL;
         bbox_queue[i].text = NULL;
-        timer_queue[i].curtime = -1.0f;
     }
 
     pthread_mutex_unlock(&render_queue_mutex);
