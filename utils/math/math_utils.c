@@ -59,3 +59,35 @@ float angle_between_vectors(struct vec3_t vec1, struct vec3_t vec2)
     float magnitude2 = sqrt(vec2.x * vec2.x + vec2.y * vec2.y + vec2.z * vec2.z);
     return acos(dot_product / (magnitude1 * magnitude2)) * 180 / M_PI;
 }
+
+void angle_vectors(struct vec3_t angles, struct vec3_t *forward, struct vec3_t *right, struct vec3_t *up)
+{
+    // Sin/cosine for rotation, pitch, yaw
+    float sp = sin(angles.x * (M_PI / 180));
+    float cp = cos(angles.x * (M_PI / 180));
+    float sy = sin(angles.y * (M_PI / 180));
+    float cy = cos(angles.y * (M_PI / 180));
+    float sr = sin(angles.z * (M_PI / 180));
+    float cr = cos(angles.z * (M_PI / 180));
+
+    if (forward)
+    {
+        forward->x = cp * cy;
+        forward->y = cp * sy;
+        forward->z = -sp;
+    }
+
+    if (right)
+    {
+        right->x = (-1 * sr * sp * cy + -1 * cr * -sy);
+        right->y = (-1 * sr * sp * sy + -1 * cr * cy);
+        right->z = -1 * sr * cp;
+    }
+
+    if (up)
+    {
+        up->x = (cr * sp * cy + -sr * -sy);
+        up->y = (cr * sp * sy + -sr * cy);
+        up->z = cr * cp;
+    }
+}

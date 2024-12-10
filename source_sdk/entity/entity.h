@@ -26,6 +26,7 @@ int get_tick_base(void *entity);
 int get_head_bone(void *entity);
 bool can_attack(void *localplayer);
 int get_class_id(void *entity);
+struct vec3_t get_shoot_pos(void* entity);
 
 enum
 {

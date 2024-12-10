@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+// TBD: This file needs serious clean up
+
 float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_distance, bool ent_in_air, int rocket_speed_per_second)
 {
     const int gravity = 800;
@@ -58,11 +60,10 @@ float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_di
     }
 }
 
-bool is_ent_visible(void *localplayer, void *entity)
+bool is_ent_visible(void *localplayer, struct vec3_t *start_pos, void *entity)
 {
-    struct vec3_t local_pos = get_ent_eye_pos(localplayer);
     struct vec3_t target_pos = get_bone_pos(entity, get_head_bone(entity));
-    struct ray_t ray = init_ray(&local_pos, &target_pos);
+    struct ray_t ray = init_ray(start_pos, &target_pos);
     struct trace_filter filter;
     init_trace_filter(&filter, localplayer);
     struct trace_t trace;
@@ -75,10 +76,9 @@ bool is_ent_visible(void *localplayer, void *entity)
     return false;
 }
 
-bool is_pos_visible(void *localplayer, struct vec3_t pos)
+bool is_pos_visible(void *localplayer, struct vec3_t *start_pos, struct vec3_t pos)
 {
-    struct vec3_t local_pos = get_ent_eye_pos(localplayer);
-    struct ray_t ray = init_ray(&local_pos, &pos);
+    struct ray_t ray = init_ray(start_pos, &pos);
     // TBD: Ignore players
     struct trace_filter filter;
     init_trace_filter(&filter, localplayer);
@@ -163,11 +163,26 @@ float get_fov(struct vec3_t view_angle, struct vec3_t target_view_angle)
     return fov;
 }
 
+void get_projectile_fire_setup(void *localplayer, struct vec3_t *view_angles, struct vec3_t offset, struct vec3_t *result)
+{
+    struct vec3_t forward, right, up;
+    struct vec3_t shoot_pos = get_shoot_pos(localplayer);
+    
+    angle_vectors(*view_angles, &forward, &right, &up);
+
+    result->x = shoot_pos.x + (forward.x * offset.x) + (right.x * offset.y) + (up.x * offset.z);
+    result->y = shoot_pos.y + (forward.y * offset.x) + (right.y * offset.y) + (up.y * offset.z);
+    result->z = shoot_pos.z + (forward.z * offset.x) + (right.z * offset.y) + (up.z * offset.z);
+}
+
 void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_id)
 {
     struct vec3_t original_view_angle = user_cmd->viewangles;
     float original_side_move = user_cmd->sidemove;
     float original_forward_move = user_cmd->forwardmove;
+    struct vec3_t local_pos;
+
+    get_projectile_fire_setup(localplayer, &user_cmd->viewangles, (struct vec3_t){ 23.5f, 12.0f, -3.0f }, &local_pos);
 
     void *target_ent = NULL;
     float target_predicted_time = -1.0f;
@@ -185,14 +200,14 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     static struct vec3_t esp_projectile_pos = {0.0f, 0.0f, 0.0f};
     static float esp_predicted_time = 0.0f;
     static float shoot_time = 0.0f;
-    const float projectile_esp_linger = 0.0f;
+    const float projectile_esp_linger = 1.0f;
     if (esp_projectile_pos.x != 0.0f && esp_projectile_pos.y != 0.0f && esp_projectile_pos.z != 0.0f)
     {
         struct vec3_t projectile_predicted_screen;
         if (screen_position(&esp_projectile_pos, &projectile_predicted_screen) == 0)
         {
             float curtime = get_global_vars_curtime();
-            add_timer((int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y, (struct vec3_t){0, 0, 255}, curtime, shoot_time, esp_predicted_time);
+            add_timer((int)projectile_predicted_screen.x, (int)projectile_predicted_screen.y - 10, (struct vec3_t){0, 0, 255}, curtime, shoot_time, esp_predicted_time);
 
             if (curtime > esp_predicted_time + projectile_esp_linger)
             {
@@ -219,7 +234,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         struct vec3_t ent_pos = get_ent_origin(entity);
         struct vec3_t ent_difference = get_difference(ent_pos, get_ent_eye_pos(localplayer));
 
-        if (is_ent_visible(localplayer, entity))
+        if (is_ent_visible(localplayer, &local_pos, entity))
         {
             struct vec3_t new_view_angle = get_view_angle(ent_difference);
             float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
@@ -250,8 +265,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 continue;
             }
 
-            float latency = get_latency(net_channel_info, 0) + get_latency(net_channel_info, 1) + 0.05;
-            struct vec3_t local_pos = get_ent_eye_pos(localplayer);
+            float latency = 0.0f; // get_latency(net_channel_info, 0) + get_latency(net_channel_info, 1) + 0.05;
             struct vec3_t ent_velocity;
             estimate_abs_velocity(entity, &ent_velocity);
             bool ent_in_air = (get_ent_flags(entity) & 1) == 0;
@@ -300,7 +314,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 rocket_predicted_pos.z += (ent_velocity.z * latency);
 
                 // TODO: Check if the rocket is going to hit a wall
-                if (is_pos_visible(localplayer, rocket_predicted_pos))
+                if (is_pos_visible(localplayer, &local_pos, rocket_predicted_pos))
                 {
                     struct vec3_t new_view_angle = get_view_angle(ent_difference);
                     struct vec3_t rocket_view_angle = get_view_angle(get_difference(rocket_predicted_pos, local_pos));
@@ -336,7 +350,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             struct vec3_t ent_pos = get_ent_origin(entity);
             struct vec3_t ent_difference = get_difference(ent_pos, get_ent_eye_pos(localplayer));
 
-            if (is_ent_visible(localplayer, entity))
+            if (is_ent_visible(localplayer, &local_pos, entity))
             {
                 struct vec3_t new_view_angle = get_view_angle(ent_difference);
                 float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
@@ -360,11 +374,11 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
 
     // Draw where aiming now
-    struct vec3_t target_screen;
-    if (screen_position(&projectile_target_pos, &target_screen) == 0)
-    {
-        add_to_render_queue(L"V", (int)target_screen.x, (int)target_screen.y, (struct vec3_t){207, 115, 54}, 0.0f);
-    }
+    struct vec3_t mins = { -3, -3, -3 };
+    struct vec3_t maxs = { 3, 3, 3 };
+    struct vec3_t orientation = { 0, 0, 0 };
+    add_box_overlay(&projectile_target_pos, &mins, &maxs, &orientation, 0, 0, 255, 255 / 2, 0.03f);
+    add_line_overlay(&local_pos, &projectile_target_pos, 255, 255, 255, false, 0.03f);
 
     if (config.aimbot.key.use_key && config.aimbot.key.is_pressed) user_cmd->buttons |= 1;
 
@@ -374,6 +388,8 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         esp_projectile_pos = projectile_target_pos;
         esp_predicted_time = get_global_vars_curtime() + target_predicted_time;
         shoot_time = get_global_vars_curtime();
+
+        add_box_overlay(&projectile_target_pos, &mins, &maxs, &orientation, 255, 0, 0, 255 / 2, target_predicted_time + projectile_esp_linger);
     }
 
     movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
@@ -384,6 +400,7 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
     struct vec3_t original_view_angle = user_cmd->viewangles;
     float original_side_move = user_cmd->sidemove;
     float original_forward_move = user_cmd->forwardmove;
+    struct vec3_t local_pos = get_ent_eye_pos(localplayer);
 
     void *target_ent = NULL;
     struct vec3_t target_view_angle;
@@ -398,14 +415,13 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
             continue;
         }
 
-        if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer) || !is_ent_visible(localplayer, entity))
+        if (is_ent_dormant(entity) || get_ent_lifestate(entity) != 1 || get_ent_team(entity) == get_ent_team(localplayer) || !is_ent_visible(localplayer, &local_pos, entity))
         {
             continue;
         }
 
         int aim_bone = (get_player_class(localplayer) != TF_CLASS_SNIPER || get_ent_health(entity) <= 50) ? 1 : get_head_bone(entity);
         struct vec3_t ent_pos = get_bone_pos(entity, aim_bone);
-        struct vec3_t local_pos = get_ent_eye_pos(localplayer);
         struct vec3_t ent_difference = get_difference(ent_pos, local_pos);
         struct vec3_t new_view_angle = get_view_angle(ent_difference);
 
@@ -437,7 +453,7 @@ void hitscan_aimbot(void *localplayer, struct user_cmd *user_cmd)
             struct vec3_t ent_pos = get_ent_origin(entity);
             struct vec3_t ent_difference = get_difference(ent_pos, get_ent_eye_pos(localplayer));
 
-            if (is_ent_visible(localplayer, entity))
+            if (is_ent_visible(localplayer, &local_pos, entity))
             {
                 struct vec3_t new_view_angle = get_view_angle(ent_difference);
                 float fov_distance = get_fov(user_cmd->viewangles, new_view_angle);
