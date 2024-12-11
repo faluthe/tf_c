@@ -25,6 +25,20 @@ struct config
             int is_mouse_btn;
             bool is_pressed;
         } key;
+        struct
+        {
+            int draw_line;
+            struct nk_colorf line_color;
+            int draw_box;
+            struct nk_colorf box_color;
+            int only_draw_if_target;
+            int previous_shot_line;
+            struct nk_colorf previous_shot_line_color;
+            int previous_shot_box;
+            struct nk_colorf previous_shot_box_color;
+            int draw_timer;
+            struct nk_colorf timer_color;
+        } projectile_preview;
     } aimbot;
     struct
     {

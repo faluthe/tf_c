@@ -199,3 +199,12 @@ int get_class_id(void *entity)
     void *client_class = get_client_class(entity);
     return *(__int32_t *)((__uint64_t)(client_class) + 0x28);
 }
+
+struct vec3_t get_shoot_pos(void* entity)
+{
+    void **vtable = *(void ***)entity;
+
+    struct vec3_t (*func)(void *) = vtable[302];
+
+    return func(entity);
+}

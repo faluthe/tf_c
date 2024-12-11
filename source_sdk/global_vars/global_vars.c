@@ -19,25 +19,6 @@ struct global_vars
     int network_protocol;
 };
 
-
-// typedef struct {
-//     float realtime;
-//     int framecount;
-//     float absoluteframetime;
-//     float curtime;
-//     float frametime;
-//     int maxClients;
-//     int tickcount;
-//     float interval_per_tick;
-//     float interpolation_amount;
-//     int simTicksThisFrame;
-//     int network_protocol;
-//     void* pSaveData; /* CSaveRestoreData* */
-//     bool m_bClient;
-//     int nTimestampNetworkingBase;
-//     int nTimestampRandomizeWindow;
-// } CGlobalVars;
-
 struct global_vars *global_vars = NULL;
 
 void set_global_vars_ptr(void *global_vars_ptr)

@@ -25,6 +25,17 @@ bool init_config()
         config.aimbot.key.code = SDL_BUTTON_X2;
         config.aimbot.key.is_mouse_btn = true;
         config.aimbot.key.is_pressed = false;
+        config.aimbot.projectile_preview.draw_line = 1;
+        config.aimbot.projectile_preview.line_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
+        config.aimbot.projectile_preview.draw_box = 1;
+        config.aimbot.projectile_preview.box_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
+        config.aimbot.projectile_preview.only_draw_if_target = 1;
+        config.aimbot.projectile_preview.previous_shot_line = 1;
+        config.aimbot.projectile_preview.previous_shot_line_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
+        config.aimbot.projectile_preview.previous_shot_box = 1;
+        config.aimbot.projectile_preview.previous_shot_box_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
+        config.aimbot.projectile_preview.draw_timer = 1;
+        config.aimbot.projectile_preview.timer_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
         config.esp.player_health_bar = 1;
         config.esp.player_bounding_box = 1;
         config.esp.player_name = 1;
