@@ -77,7 +77,7 @@ void draw_aim_tab(struct nk_context *ctx)
     nk_label(ctx, fov_text, NK_TEXT_LEFT);
     nk_slider_float(ctx, 1.0f, &config.aimbot.fov, 50.0f, 1.0f);
     
-    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_layout_row_dynamic(ctx, 20, 1);
     nk_checkbox_label(ctx, "Draw FOV", &config.aimbot.draw_fov);
 
     nk_layout_row_dynamic(ctx, 20, 2);
@@ -85,6 +85,73 @@ void draw_aim_tab(struct nk_context *ctx)
     if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.fov_color), nk_vec2(nk_widget_width(ctx), 400))) {
         nk_layout_row_dynamic(ctx, 120, 1);
         config.aimbot.fov_color = nk_color_picker(ctx, config.aimbot.fov_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
+
+    nk_layout_row_dynamic(ctx, 30, 1);
+    nk_label(ctx, "Projectile preview", NK_TEXT_LEFT);
+
+    static const char *proj_preview_options[] = { "Trace line", "3D Box" };
+    static int *proj_preview_selections[] = { &config.aimbot.projectile_preview.draw_line, &config.aimbot.projectile_preview.draw_box };
+    static char proj_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Preview type:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, proj_preview_options, 2, proj_preview_selections, 2, proj_preview_text, sizeof(proj_preview_text));
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Line color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.line_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.projectile_preview.line_color = nk_color_picker(ctx, config.aimbot.projectile_preview.line_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Box color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.box_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.projectile_preview.box_color = nk_color_picker(ctx, config.aimbot.projectile_preview.box_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 1);
+    nk_checkbox_label(ctx, "Only draw if target exists", &config.aimbot.projectile_preview.only_draw_if_target);
+
+    static int *previous_shot_selections[] = { &config.aimbot.projectile_preview.previous_shot_line, &config.aimbot.projectile_preview.previous_shot_box };
+    static char previous_shot_preview_text[128] = "";
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Previous shot preview:", NK_TEXT_LEFT);
+    multi_select_combo_box(ctx, proj_preview_options, 2, previous_shot_selections, 2, previous_shot_preview_text, sizeof(previous_shot_preview_text));
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Previous shot line color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.previous_shot_line_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.projectile_preview.previous_shot_line_color = nk_color_picker(ctx, config.aimbot.projectile_preview.previous_shot_line_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Previous shot box color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.previous_shot_box_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.projectile_preview.previous_shot_box_color = nk_color_picker(ctx, config.aimbot.projectile_preview.previous_shot_box_color, NK_RGBA);
+        nk_layout_row_dynamic(ctx, 25, 1);
+        nk_combo_end(ctx);
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 1);
+    nk_checkbox_label(ctx, "Draw timer", &config.aimbot.projectile_preview.draw_timer);
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Timer color:", NK_TEXT_LEFT);
+    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.timer_color), nk_vec2(nk_widget_width(ctx), 400))) {
+        nk_layout_row_dynamic(ctx, 120, 1);
+        config.aimbot.projectile_preview.timer_color = nk_color_picker(ctx, config.aimbot.projectile_preview.timer_color, NK_RGBA);
         nk_layout_row_dynamic(ctx, 25, 1);
         nk_combo_end(ctx);
     }

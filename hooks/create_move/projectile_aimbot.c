@@ -189,6 +189,11 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
     if (target_ent == NULL)
     {
+        if (config.aimbot.projectile_preview.only_draw_if_target || (!config.aimbot.projectile_preview.draw_box && !config.aimbot.projectile_preview.draw_line))
+        {
+            return;
+        }
+
         // TBD: Draw predicted pos no aimbot for all guns
         float pitch_rad = user_cmd->viewangles.x * (M_PI / 180.0f);
         float yaw_rad = user_cmd->viewangles.y * (M_PI / 180.0f);
@@ -214,15 +219,54 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         struct trace_t trace;
         trace_ray(&ray, 0x4600400b, &filter, &trace);
 
-        add_box_overlay(&trace.endpos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, time_per_box);
-        add_line_overlay(&shoot_pos, &trace.endpos, 255, 255, 255, true, time_per_box);
+        if (config.aimbot.projectile_preview.draw_box)
+        {
+            float box_alpha = config.aimbot.projectile_preview.box_color.a * 255;
+            struct vec3_t box_color = {
+                config.aimbot.projectile_preview.box_color.r * 255,
+                config.aimbot.projectile_preview.box_color.g * 255,
+                config.aimbot.projectile_preview.box_color.b * 255
+            };
+            add_box_overlay(&trace.endpos, &mins, &maxs, &orientation, box_color.x, box_color.y, box_color.z, box_alpha, time_per_box);
+        }
+
+        if (config.aimbot.projectile_preview.draw_line)
+        {
+            struct vec3_t line_color = {
+                config.aimbot.projectile_preview.line_color.r * 255,
+                config.aimbot.projectile_preview.line_color.g * 255,
+                config.aimbot.projectile_preview.line_color.b * 255
+            };
+            // TBD: This should use alpha
+            add_line_overlay(&shoot_pos, &trace.endpos, line_color.x, line_color.y, line_color.z, true, time_per_box);
+        }
 
         return;
     }
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
-    add_box_overlay(&result_pos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, time_per_box);
-    add_line_overlay(&shoot_pos, &result_pos, 0, 0, 255, true, time_per_box);
+
+    if (config.aimbot.projectile_preview.draw_box)
+    {
+        float box_alpha = config.aimbot.projectile_preview.box_color.a * 255;
+        struct vec3_t box_color = {
+            config.aimbot.projectile_preview.box_color.r * 255,
+            config.aimbot.projectile_preview.box_color.g * 255,
+            config.aimbot.projectile_preview.box_color.b * 255
+        };
+        add_box_overlay(&result_pos, &mins, &maxs, &orientation, box_color.x, box_color.y, box_color.z, box_alpha, time_per_box);
+    }
+
+    if (config.aimbot.projectile_preview.draw_line)
+    {
+        struct vec3_t line_color = {
+            config.aimbot.projectile_preview.line_color.r * 255,
+            config.aimbot.projectile_preview.line_color.g * 255,
+            config.aimbot.projectile_preview.line_color.b * 255
+        };
+        // TBD: This should use alpha
+        add_line_overlay(&shoot_pos, &result_pos, line_color.x, line_color.y, line_color.z, true, time_per_box);
+    }
 
     if (config.aimbot.key.use_key && config.aimbot.key.is_pressed)
     {
@@ -235,9 +279,36 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     {
         user_cmd->viewangles = target_view_angle;
 
-        add_box_overlay(&result_pos, &mins, &maxs, &orientation, 255, 0, 0, 255 / 2, result_time + 0.5f);
-        add_line_overlay(&shoot_pos, &result_pos, 0, 255, 0, true, result_time + 0.5f);
-        add_timer((struct vec3_t){ result_pos.x, result_pos.y, result_pos.z + 10}, (struct vec3_t){ 0, 0, 255 }, get_global_vars_curtime(), get_global_vars_curtime() + result_time);
+        if (config.aimbot.projectile_preview.draw_timer)
+        {
+            struct vec3_t timer_color = {
+                config.aimbot.projectile_preview.timer_color.r * 255,
+                config.aimbot.projectile_preview.timer_color.g * 255,
+                config.aimbot.projectile_preview.timer_color.b * 255
+            };
+            add_timer((struct vec3_t){ result_pos.x, result_pos.y, result_pos.z + 10}, timer_color, get_global_vars_curtime(), get_global_vars_curtime() + result_time);
+        }
+
+        if (config.aimbot.projectile_preview.previous_shot_line)
+        {
+            struct vec3_t previous_shot_line_color = {
+                config.aimbot.projectile_preview.previous_shot_line_color.r * 255,
+                config.aimbot.projectile_preview.previous_shot_line_color.g * 255,
+                config.aimbot.projectile_preview.previous_shot_line_color.b * 255
+            };
+            add_line_overlay(&shoot_pos, &result_pos, previous_shot_line_color.x, previous_shot_line_color.y, previous_shot_line_color.z, true, result_time);
+        }
+
+        if (config.aimbot.projectile_preview.previous_shot_box)
+        {
+            float box_alpha = config.aimbot.projectile_preview.previous_shot_box_color.a * 255;
+            struct vec3_t box_color = {
+                config.aimbot.projectile_preview.previous_shot_box_color.r * 255,
+                config.aimbot.projectile_preview.previous_shot_box_color.g * 255,
+                config.aimbot.projectile_preview.previous_shot_box_color.b * 255
+            };
+            add_box_overlay(&result_pos, &mins, &maxs, &orientation, box_color.x, box_color.y, box_color.z, box_alpha, result_time);
+        }
     }
 
     movement_fix(user_cmd, original_view_angle, original_forward_move, original_side_move);
