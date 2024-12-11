@@ -47,6 +47,7 @@ void init_render_queue()
     }
 }
 
+// Called per frame
 void add_to_render_queue(const wchar_t *text, int x, int y, struct vec3_t color, float data)
 {
     pthread_mutex_lock(&render_queue_mutex);
@@ -67,6 +68,7 @@ void add_to_render_queue(const wchar_t *text, int x, int y, struct vec3_t color,
     pthread_mutex_unlock(&render_queue_mutex);
 }
 
+// Called per frame
 void add_bbox_decorator(const wchar_t *text, struct vec3_t color, void *entity)
 {
     pthread_mutex_lock(&render_queue_mutex);
@@ -85,7 +87,7 @@ void add_bbox_decorator(const wchar_t *text, struct vec3_t color, void *entity)
     pthread_mutex_unlock(&render_queue_mutex);
 }
 
-// Called once, others are all per frame
+// Called once, self clears
 void add_timer(struct vec3_t world_pos, struct vec3_t color, float starttime, float endtime)
 {
     pthread_mutex_lock(&render_queue_mutex);
@@ -198,6 +200,7 @@ void draw_timer_queue()
     pthread_mutex_unlock(&render_queue_mutex);
 }
 
+// Clears queues for next frame
 void clear_render_queue()
 {
     pthread_mutex_lock(&render_queue_mutex);

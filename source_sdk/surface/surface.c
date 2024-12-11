@@ -41,6 +41,15 @@ void draw_outlined_rect(int x0, int y0, int x1, int y1)
     func(interface, x0, y0, x1, y1);
 }
 
+void draw_line(int x0, int y0, int x1, int y1)
+{
+    void **vtable = *(void ***)interface;
+
+    void (*func)(void *, int, int, int, int) = vtable[15];
+
+    func(interface, x0, y0, x1, y1);
+}
+
 unsigned long text_create_font()
 {
     void **vtable = *(void ***)interface;

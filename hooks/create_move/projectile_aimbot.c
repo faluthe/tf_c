@@ -181,9 +181,11 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     get_projectile_fire_setup(localplayer, user_cmd->viewangles, (struct vec3_t){ 23.5f, 12.0f, -3.0f }, &shoot_pos);
     void *target_ent = get_closet_fov_ent_proj(localplayer, &local_pos, user_cmd->viewangles, weapon_id, &target_view_angle, &result_pos, &result_time);
 
+    // TBD: This is a really bad method of drawing this
     struct vec3_t mins = { -3, -3, -3 };
     struct vec3_t maxs = { 3, 3, 3 };
     struct vec3_t orientation = { 0, 0, 0 };
+    static const float time_per_box = 0.03f;
 
     if (target_ent == NULL)
     {
@@ -210,17 +212,17 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         struct trace_filter filter;
         init_trace_filter(&filter, localplayer);
         struct trace_t trace;
-        trace_ray(&ray, 0x4200400b, &filter, &trace);
+        trace_ray(&ray, 0x4600400b, &filter, &trace);
 
-        add_box_overlay(&trace.endpos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, 0.03f);
-        add_line_overlay(&shoot_pos, &trace.endpos, 255, 255, 255, false, 0.03f);
+        add_box_overlay(&trace.endpos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, time_per_box);
+        add_line_overlay(&shoot_pos, &trace.endpos, 255, 255, 255, true, time_per_box);
 
         return;
     }
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
-    add_box_overlay(&result_pos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, 0.03f);
-    add_line_overlay(&shoot_pos, &result_pos, 0, 0, 255, false, 0.03f);
+    add_box_overlay(&result_pos, &mins, &maxs, &orientation, 255, 255, 255, 255 / 2, time_per_box);
+    add_line_overlay(&shoot_pos, &result_pos, 0, 0, 255, true, time_per_box);
 
     if (config.aimbot.key.use_key && config.aimbot.key.is_pressed)
     {
@@ -234,7 +236,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
         user_cmd->viewangles = target_view_angle;
 
         add_box_overlay(&result_pos, &mins, &maxs, &orientation, 255, 0, 0, 255 / 2, result_time + 0.5f);
-        add_line_overlay(&shoot_pos, &result_pos, 0, 255, 0, false, result_time + 0.5f);
+        add_line_overlay(&shoot_pos, &result_pos, 0, 255, 0, true, result_time + 0.5f);
         add_timer((struct vec3_t){ result_pos.x, result_pos.y, result_pos.z + 10}, (struct vec3_t){ 0, 0, 255 }, get_global_vars_curtime(), get_global_vars_curtime() + result_time);
     }
 
