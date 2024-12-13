@@ -14,6 +14,11 @@ __int32_t get_ent_flags(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0x460);
 }
 
+void set_ent_flags(void *entity, __int32_t flags)
+{
+    *(__int32_t *)((__uint64_t)(entity) + 0x460) = flags;
+}
+
 __int32_t get_ent_health(void *entity)
 {
     return *(__int32_t *)((__uint64_t)(entity) + 0xD4);
@@ -40,6 +45,12 @@ struct vec3_t get_ent_origin(void *entity)
     return *(struct vec3_t *)((__uint64_t)(entity) + 0x328);
 }
 
+void set_ent_origin(void *entity, float x, float y, float z)
+{
+    struct vec3_t origin = {x, y, z};
+    *(struct vec3_t *)((__uint64_t)(entity) + 0x328) = origin;
+}
+
 void *get_collideable(void *entity)
 {
     return (void *)((__uint64_t)(entity) + 0x240);
@@ -63,9 +74,19 @@ struct vec3_t get_ent_angles(void *entity)
   return *(struct vec3_t *)((__uint64_t)(entity) + 0x334);
 }
 
+void set_ent_angles(void *entity, struct vec3_t angles)
+{
+    *(struct vec3_t *)((__uint64_t)(entity) + 0x334) = angles;
+}
+
 struct vec3_t get_ent_velocity(void *entity)
 {
     return *(struct vec3_t *)((__uint64_t)(entity) + 0x168);
+}
+
+void set_ent_velocity(void *entity, struct vec3_t velocity)
+{
+    *(struct vec3_t *)((__uint64_t)(entity) + 0x168) = velocity;
 }
 
 __int32_t setup_bones(void *entity, void *bone_to_world_out, __int32_t max_bones, __int32_t bone_mask, float current_time)
@@ -207,4 +228,129 @@ struct vec3_t get_shoot_pos(void* entity)
     struct vec3_t (*func)(void *) = vtable[302];
 
     return func(entity);
+}
+
+void set_current_command(void *entity, void *command)
+{
+    *(__uint64_t *)((__uint64_t)(entity) + 0x1620) = (__uint64_t)(command);
+}
+
+bool player_is_ducking(void *entity)
+{
+    return get_ent_flags(entity) & 2;
+}
+
+__uint8_t get_b_ducked(void *entity)
+{
+    return *(__uint8_t *)((__uint64_t)(entity) + 0x1288);
+}
+
+void set_b_ducked(void *entity, __uint8_t ducked)
+{
+    *(__uint8_t *)((__uint64_t)(entity) + 0x1288) = ducked;
+}
+
+float get_duck_time(void *entity)
+{
+    return *(float *)((__uint64_t)(entity) + 0x128C);
+}
+
+void set_duck_time(void *entity, float time)
+{
+    *(float *)((__uint64_t)(entity) + 0x128C) = time;
+}
+
+float get_duck_jump_time(void *entity)
+{
+    return *(float *)((__uint64_t)(entity) + 0x1290);
+}
+
+void set_duck_jump_time(void *entity, float time)
+{
+    *(float *)((__uint64_t)(entity) + 0x1290) = time;
+}
+
+__uint8_t get_b_ducking(void *entity)
+{
+    return *(__uint8_t *)((__uint64_t)(entity) + 0x1289);
+}
+
+void set_b_ducking(void *entity, __uint8_t ducking)
+{
+    *(__uint8_t *)((__uint64_t)(entity) + 1289) = ducking;
+}
+
+__uint8_t get_b_in_duck_jump(void *entity)
+{
+    return *(__uint8_t *)((__uint64_t)(entity) + 0x1290);
+}
+
+void set_b_in_duck_jump(void *entity, __uint8_t in_duck_jump)
+{
+    *(__uint8_t *)((__uint64_t)(entity) + 0x1290) = in_duck_jump;
+}
+
+__int32_t get_ground_entity_handle(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0x31C);
+}
+
+void set_ground_entity_handle(void *entity, __int32_t handle)
+{
+    *(__int32_t *)((__uint64_t)(entity) + 0x31C) = handle;
+}
+
+float get_model_scale(void *entity)
+{
+    return *(float *)((__uint64_t)(entity) + 0x91C);
+}
+
+void set_model_scale(void *entity, float scale)
+{
+    *(float *)((__uint64_t)(entity) + 0x91C) = scale;
+}
+
+void *get_handle_entity(void *entity)
+{
+    void *collideable = get_collideable(entity);
+    void **vtable = *(void ***)collideable;
+
+    void *(*func)(void *) = vtable[0];
+
+    return func(collideable);
+}
+
+__uint64_t get_eh_handle(void *entity)
+{
+    // void *handle_entity = get_handle_entity(entity);
+
+    // log_msg("Handle entity: %p\n", handle_entity);
+
+    // void **vtable = *(void ***)handle_entity;
+
+    // void *(*func)(void *) = vtable[2];
+
+    // return func(entity);
+
+    return *(__uint64_t *)((__uint64_t)(entity) + 0x8);
+}
+
+struct vec3_t get_base_velocity(void *entity)
+{
+    return *(struct vec3_t *)((__uint64_t)(entity) + 0x1F8);
+}
+
+void set_base_velocity(void *entity, struct vec3_t velocity)
+{
+    *(struct vec3_t *)((__uint64_t)(entity) + 0x1F8) = velocity;
+}
+
+struct vec3_t get_view_offset(void *entity)
+{
+    return *(struct vec3_t *)((__uint64_t)(entity) + 0x144);
+}
+
+void set_view_offset(void *entity, struct vec3_t view_offset)
+{
+    *(struct vec3_t *)((__uint64_t)(entity) + 0x144) = view_offset;
 }

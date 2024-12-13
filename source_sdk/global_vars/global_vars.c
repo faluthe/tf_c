@@ -35,3 +35,13 @@ float get_global_vars_interval_per_tick()
 {
     return global_vars->interval_per_tick;
 }
+
+float get_global_vars_frametime()
+{
+    return global_vars->frametime;
+}
+
+void set_global_vars_frametime(float frametime)
+{
+    global_vars->frametime = frametime;
+}

@@ -1,10 +1,12 @@
 #include "../utils/utils.h"
 #include "interfaces.h"
 
+#include "../source_sdk/client_prediction/client_prediction.h"
 #include "../source_sdk/debug_overlay/debug_overlay.h"
 #include "../source_sdk/engine_client/engine_client.h"
 #include "../source_sdk/engine_trace/engine_trace.h"
 #include "../source_sdk/entity_list/entity_list.h"
+#include "../source_sdk/game_movement/game_movement.h"
 #include "../source_sdk/global_vars/global_vars.h"
 #include "../source_sdk/panel/panel.h"
 #include "../source_sdk/surface/surface.h"
@@ -24,10 +26,12 @@ void **vgui_panel_vtable = NULL;
 
 // Locals
 static const char *client_version = "VClient017";
+static const char *client_prediction_version = "VClientPrediction001";
 static const char *debug_overlay_version = "VDebugOverlay003";
 static const char *engine_client_version = "VEngineClient014";
 static const char *engine_trace_version = "EngineTraceClient003";
 static const char *entity_list_version = "VClientEntityList003";
+static const char *game_movement_version = "GameMovement001";
 static const char *surface_version = "VGUI_Surface030";
 static const char *vgui_panel_version = "VGUI_Panel009";
 
@@ -96,8 +100,18 @@ bool init_interfaces()
     void *entity_list_interface = get_interface(client_factory, entity_list_version);
     void *surface_interface = get_interface(surface_factory, surface_version);
     void *vgui_panel_interface = get_interface(vgui_factory, vgui_panel_version);
+    void *client_prediction = get_interface(client_factory, client_prediction_version);
+    void *game_movement_interface = get_interface(client_factory, game_movement_version);
 
-    if (!client_interface || !engine_client_interface || !entity_list_interface || !surface_interface || !vgui_panel_interface || !debug_overlay_interface || !engine_trace_interface)
+    if (!client_interface || 
+        !engine_client_interface || 
+        !entity_list_interface || 
+        !surface_interface || 
+        !vgui_panel_interface || 
+        !debug_overlay_interface || 
+        !engine_trace_interface || 
+        !client_prediction || 
+        !game_movement_interface)
     {
         log_msg("Failed to get all interfaces\n");
         return false;
@@ -109,6 +123,8 @@ bool init_interfaces()
     set_panel_interface(vgui_panel_interface);
     set_debug_overlay_interface(debug_overlay_interface);
     set_engine_trace_interface(engine_trace_interface);
+    set_client_prediction_interface(client_prediction);
+    set_game_movement_interface(game_movement_interface);
 
     vgui_panel_vtable = *(void ***)vgui_panel_interface;
 

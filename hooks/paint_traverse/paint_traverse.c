@@ -13,8 +13,18 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-// extern
-__int64_t (*paint_traverse_original)(void *, void *, __int8_t, __int8_t) = NULL;
+
+
+
+
+
+
+
+
+
+
+
+
 
 // TBD: Fix for scoped weapons
 void draw_aimbot_fov()
