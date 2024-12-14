@@ -1,4 +1,5 @@
 #ifndef MOVE_DATA_H
+#define MOVE_DATA_H
 #include "math/vec3.h"
 
 #include <stdbool.h>

@@ -27,6 +27,7 @@ __int32_t get_active_weapon(void *entity);
 struct vec3_t* get_collideable_mins(void *entity);
 struct vec3_t* get_collideable_maxs(void *entity);
 int get_tick_base(void *entity);
+void set_tick_base(void *entity, int tick_base);
 int get_head_bone(void *entity);
 bool can_attack(void *localplayer);
 int get_class_id(void *entity);
@@ -52,6 +53,14 @@ struct vec3_t get_base_velocity(void *entity);
 void set_base_velocity(void *entity, struct vec3_t velocity);
 struct vec3_t get_view_offset(void *entity);
 void set_view_offset(void *entity, struct vec3_t offset);
+void set_player_button_state(void *entity, int buttons);
+void set_local_view_angles(void *entity, struct vec3_t view_angles);
+bool physics_run_think(void *entity, int thinkmethod);
+void pre_think(void *entity);
+int get_player_next_think_tick(void *entity);
+void set_next_think(void *entity, int next_think);
+void player_think(void *entity);
+void post_think(void *entity);
 
 enum
 {

@@ -1,3 +1,9 @@
+#ifndef CLIENT_PREDICTION_H
+#define CLIENT_PREDICTION_H
+
+#include "../move_data.h"
+#include "../user_cmd.h"
+
 #include <stdint.h>
 
 struct client_prediction
@@ -16,3 +22,8 @@ void set_in_prediction(__uint8_t in_prediction);
 __uint8_t get_first_time_predicted();
 void set_first_time_predicted(__uint8_t first_time_predicted);
 __uint8_t get_engine_paused();
+void reset_instance_counters();
+void setup_move(void *player, struct user_cmd *user_cmd, void *move_helper, struct move_data *move_data);
+void finish_move(void *player, struct user_cmd *user_cmd, struct move_data *move_data);
+
+#endif

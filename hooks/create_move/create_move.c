@@ -186,6 +186,7 @@ void draw_predicted_movement()
         set_first_time_predicted(false);
         set_global_vars_frametime(get_engine_paused() ? 0.0f : get_global_vars_interval_per_tick());
 
+        // TBD: This may have to be done by TFGameMovment not CGameMovment? Sig it?
         process_movement(localplayer, &move_data);
 
         log_msg("Tick (%d) Move data abs origin: (%f, %f, %f)\n", n, move_data.abs_origin.x, move_data.abs_origin.y, move_data.abs_origin.z);
@@ -239,6 +240,72 @@ int get_tick_base_prediction(struct user_cmd *cmd, void *localplayer)
     return tick;
 }
 
+int *get_prediction_random_seed()
+{
+    static int *random_seed = 0;
+
+    if (random_seed == 0)
+    {
+        // Pattern: 8B 57 38 48 8D 05 ?? ?? ?? ??
+        __uint8_t pattern[] = {0x8B, 0x57, 0x38, 0x48, 0x8D, 0x05, 0x0, 0x0, 0x0, 0x0};
+        void *result = pattern_scan("client.so", pattern, "xxxxxx????");
+
+        if (!result)
+        {
+            log_msg("Failed to find prediction random seed pattern\n");
+            return NULL;
+        }
+
+        int rel_addr = *(__int32_t *)((__int64_t)result + 6);
+        random_seed = (__int32_t *)((__int64_t)result + 10 + rel_addr);
+        
+        log_msg("Prediction random seed found at %p\n", random_seed);
+    }
+
+    return random_seed;
+}
+
+void *get_move_helper()
+{
+    static void *singleton_ptr = NULL;
+
+    if (singleton_ptr == NULL)
+    {
+        __uint8_t pattern[] = {0x48, 0x8D, 0x0D, 0x0, 0x0, 0x0, 0x0, 0x48, 0x8B, 0x38, 0x48, 0x8B, 0x09};
+        void *result = pattern_scan("client.so", pattern, "xxx????xxxxxx");
+
+        if (!result)
+        {
+            log_msg("Failed to find move helper singleton pattern\n");
+            return NULL;
+        }
+
+        int rel_addr = *(__int32_t *)((__int64_t)result + 3);
+        singleton_ptr = (void *)(*(__int64_t *)((__int64_t)result + 7 + rel_addr));
+
+        log_msg("Move helper singleton found at %p\n", singleton_ptr);
+    }
+
+    return singleton_ptr;
+}
+
+void move_helper_set_singleton(void *move_helper)
+{
+    void *singleton_ptr = get_move_helper();
+
+    // Might be missing a dereference here
+    void **vtable = *(void ***)singleton_ptr;
+    // Might be 0 might be 1 idk this function prob needs inspection and idfk if i need to even use this shit
+    void (*func)(void *, void *) = vtable[0];
+
+    func(singleton_ptr, move_helper);
+}
+
+static int *random_seed;
+float old_curtime;
+float old_frametime;
+int old_tickcount;
+
 void start_prediction(struct user_cmd *user_cmd)
 {
     void *localplayer = get_localplayer();
@@ -250,20 +317,19 @@ void start_prediction(struct user_cmd *user_cmd)
 
     // Basically going to rebuild CPrediction::RunCommand here
 
-
-    // StartCommand( player, ucmd )
-    
-    // ResetInstanceCounters -- dis gonna be a bitch to find unless vprof exports the string
+    // StartCommand( player, ucmd ) {
+    reset_instance_counters();
     set_current_command(localplayer, user_cmd);
-    // SetPredictionRadomSeed
-    // int *random_seed = sig scan for the old seed (?) maybe just use cmd->random_seed?
+    // SetPredictionRadomSeed {
+    random_seed = get_prediction_random_seed(); // maybe just use cmd->random_seed?
     // int old_random_seed = *random_seed (?) might not need this 
-    // *random_seed = md5_pseudo_random(cmd->cmd_number & __INT_MAX__ (?))
+    *random_seed = md5_pseudo_random(user_cmd->command_number & __INT_MAX__);
     // Maybe SetPredictionPlayer?
+    // }
 
-    float old_curtime = get_global_vars_curtime();
-    float old_frametime = get_global_vars_frametime();
-    int old_tickcount = get_global_vars_tickcount();
+    old_curtime = get_global_vars_curtime();
+    old_frametime = get_global_vars_frametime();
+    old_tickcount = get_global_vars_tickcount();
 
     int old_tickbase = get_tick_base(localplayer);
     bool old_is_first_prediction = get_first_time_predicted();
@@ -276,32 +342,35 @@ void start_prediction(struct user_cmd *user_cmd)
     set_first_time_predicted(false);
     set_in_prediction(true);
 
-    // gamemovement->StartTrackPredictionErrors( player )
-    // set_player_button_state(localplayer, user_cmd->buttons);
-    // set_local_view_angles(localplayer, user_cmd->viewangles);
+    start_track_prediction_errors(localplayer);
+    set_player_button_state(localplayer, user_cmd->buttons);
+    set_local_view_angles(localplayer, user_cmd->viewangles);
 
     // RunPreThink( player )
-    // if (!player->PhysicsRunThink(0))
-    // {
-    //     player->PreThink(); -- virtual
-    // }
+    if (physics_run_think(localplayer, 0))
+    {
+        pre_think(localplayer);
+    }
 
     // RunThink( player, TICK_INTERVAL )
-    // int thinktick = get_player_next_tick_think(localplayer);
-    // if (thinktick > 0 && thinktick <= get_global_vars_tickcount())
-    // {
-    //     player->SetNextThink(TICK_NEVER_THINK (-1), NULL);
-    //     player->Think();
-    // }
+    int thinktick = get_player_next_think_tick(localplayer);
+    if (thinktick > 0 && thinktick <= get_global_vars_tickcount())
+    {
+        set_next_think(localplayer, -1);
+        player_think(localplayer);
+    }
 
     // movehelper->sethost(localplayer)
+    move_helper_set_singleton(localplayer);
 
-    // iprediction->SetupMove( player, ucmd, movehelper, &movedata )
-    // gamemovement->ProcessMovement( player, &movedata )
-    // iprediction->FinishMove( player, ucmd, &movedata )
+    static struct move_data movedata;
+    setup_move(localplayer, user_cmd, get_move_helper(), &movedata);
+    process_movement(localplayer, &movedata);
+    finish_move(localplayer, user_cmd, &movedata);
 
-    // player->PostThink()
-    // set_tickbase(localplayer, old_tickbase);
+    post_think(localplayer);
+    finish_track_prediction_errors(localplayer);
+    set_tick_base(localplayer, old_tickbase);
 
     set_in_prediction(old_in_prediction);
     set_first_time_predicted(old_is_first_prediction);
@@ -316,18 +385,18 @@ void end_prediction()
         return;
     }
 
-    // movehelper->sethost(NULL);
-    // set_global_vars_curtime(old_curtime);
-    // set_global_vars_frametime(old_frametime);
-    // set_global_vars_tickcount(old_tickcount);
+    move_helper_set_singleton(NULL);
+    set_global_vars_curtime(old_curtime);
+    set_global_vars_frametime(old_frametime);
+    set_global_vars_tickcount(old_tickcount);
     set_current_command(localplayer, NULL);
 
-    // *random_seed = -1;
+    *random_seed = -1;
 }
 
 
 
-static bool silent_aim = true;
+static bool silent_aim = false;
 
 // extern
 __int64_t (*create_move_original)(void *, float, void *) = NULL;
@@ -359,8 +428,11 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     if (user_cmd->tick_count > 1)
     {
         clear_render_queue();
+
+        start_prediction(user_cmd);
         aimbot(localplayer, user_cmd);
         draw_predicted_movement();
+        end_prediction();
     }
 
     // If player is not on ground unset jump button flag (breaks scout double jump)

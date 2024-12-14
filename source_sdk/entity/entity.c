@@ -156,6 +156,11 @@ int get_tick_base(void *entity)
     return *(__int32_t *)((__uint64_t)(entity) + 0x1718);
 }
 
+void set_tick_base(void *entity, int tick_base)
+{
+    *(__int32_t *)((__uint64_t)(entity) + 0x1718) = tick_base;
+}
+
 bool can_attack(void *localplayer)
 {
     void *active_weapon = get_client_entity(get_active_weapon(localplayer));
@@ -353,4 +358,137 @@ struct vec3_t get_view_offset(void *entity)
 void set_view_offset(void *entity, struct vec3_t view_offset)
 {
     *(struct vec3_t *)((__uint64_t)(entity) + 0x144) = view_offset;
+}
+
+void set_player_button_state(void *entity, int buttons)
+{
+    static void (*func)(void *, int) = NULL;
+
+    if (func == NULL)
+    {
+        // Pattern: E8 ?? ?? ?? ?? 48 8B 03 49 8D 75 10
+        __uint8_t pattern[] = {0xE8, 0x0, 0x0, 0x0, 0x0, 0x48, 0x8B, 0x03, 0x49, 0x8D, 0x75, 0x10};
+        void *scan_result = pattern_scan("client.so", pattern, "x????xxxxxxx");
+
+        if (!scan_result)
+        {
+            log_msg("Failed to find SetPlayerButtonState pattern\n");
+            return;
+        }
+
+        __uint32_t rel_addr = *(__uint32_t *)((__uint64_t)scan_result + 1);
+        __uint64_t abs_addr = (__uint64_t)scan_result + 5 + rel_addr;
+
+        func = (__typeof__(func))abs_addr;
+
+
+
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState pattern found at %p\n", scan_result);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+        log_msg("UpdateButtonState found at %p\n", func);
+    }
+
+    func(entity, buttons);
+}
+
+void set_local_view_angles(void *entity, struct vec3_t view_angles)
+{
+    void **vtable = *(void ***)entity;
+
+    void (*func)(void *, struct vec3_t) = vtable[366];
+
+    func(entity, view_angles);
+}
+
+bool physics_run_think(void *entity, int thinkmethod)
+{
+    bool (*func)(void *, int) = NULL;
+
+    if (func == NULL)
+    {
+        __uint8_t pattern[] = {0xF6, 0x87, 0x0, 0x0, 0x0, 0x0, 0x0F, 0x85, 0x0, 0x0, 0x0, 0x0, 0x55, 0x83, 0xFE, 0x02};
+        void *scan_result = pattern_scan("client.so", pattern, "xx?????xx????xxxx");
+
+        if (!scan_result)
+        {
+            log_msg("Failed to find PhysicsRunThink pattern\n");
+            return false;
+        }
+
+        func = scan_result;
+    }
+
+    return func(entity, thinkmethod);
+}
+
+void pre_think(void *entity)
+{
+    void **vtable = *(void ***)entity;
+
+    void (*func)(void *) = vtable[325];
+
+    func(entity);
+}
+
+int get_player_next_think_tick(void *entity)
+{
+    return *(__int32_t *)((__uint64_t)(entity) + 0xB4);
+}
+
+void set_next_think(void *entity, int next_think)
+{
+    void (*func)(void *, int, void *) = NULL;
+
+    if (func == NULL)
+    {
+        __uint8_t pattern[] = {0xE8, 0x0, 0x0, 0x0, 0x0, 0x48, 0x8B, 0x03, 0xF3, 0x0F, 0x10, 0x40, 0x0};
+        void *scan_result = pattern_scan("client.so", pattern, "x????xxxxxxx?");
+
+        if (!scan_result)
+        {
+            log_msg("Failed to find SetNextThink pattern\n");
+            return;
+        }
+
+        __uint32_t rel_addr = *(__uint32_t *)((__uint64_t)scan_result + 1);
+        __uint64_t abs_addr = (__uint64_t)scan_result + 5 + rel_addr;
+
+        log_msg("SetNextThink found at %p\n", abs_addr);
+
+        func = (__typeof__(func))abs_addr;
+    }
+
+    func(entity, next_think, NULL);
+}
+
+void player_think(void *entity)
+{
+    void **vtable = *(void ***)entity;
+
+    void (*func)(void *) = vtable[174];
+
+    func(entity);
+}
+
+void post_think(void *entity)
+{
+    void **vtable = *(void ***)entity;
+
+    void (*func)(void *) = vtable[326];
+
+    func(entity);
 }
