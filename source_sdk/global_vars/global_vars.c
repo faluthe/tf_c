@@ -31,6 +31,11 @@ float get_global_vars_curtime()
     return global_vars->curtime;
 }
 
+void set_global_vars_curtime(float curtime)
+{
+    global_vars->curtime = curtime;
+}
+
 float get_global_vars_interval_per_tick()
 {
     return global_vars->interval_per_tick;
@@ -44,4 +49,14 @@ float get_global_vars_frametime()
 void set_global_vars_frametime(float frametime)
 {
     global_vars->frametime = frametime;
+}
+
+int get_global_vars_tickcount()
+{
+    return global_vars->tickcount;
+}
+
+void set_global_vars_tickcount(int tickcount)
+{
+    global_vars->tickcount = tickcount;
 }

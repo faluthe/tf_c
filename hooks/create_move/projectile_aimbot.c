@@ -179,6 +179,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     struct vec3_t local_pos = get_ent_eye_pos(localplayer);
     
     get_projectile_fire_setup(localplayer, user_cmd->viewangles, (struct vec3_t){ 23.5f, 12.0f, -3.0f }, &shoot_pos);
+
     void *target_ent = get_closet_fov_ent_proj(localplayer, &local_pos, user_cmd->viewangles, weapon_id, &target_view_angle, &result_pos, &result_time);
 
     // TBD: This is a really bad method of drawing this

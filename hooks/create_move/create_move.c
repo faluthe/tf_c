@@ -18,6 +18,7 @@
 #include "../../source_sdk/client_prediction/client_prediction.h"
 #include "../../source_sdk/game_movement/game_movement.h"
 #include "../../source_sdk/global_vars/global_vars.h"
+#include "../../source_sdk/md5/md5.h"
 #include "../../source_sdk/math/vec3.h"
 #include "../../source_sdk/user_cmd.h"
 #include "../../utils/math/math_utils.h"
@@ -69,6 +70,11 @@ struct vec3_t velocity_to_angles(struct vec3_t direction)
 int time_to_ticks(float time)
 {
     return (int)(0.5f + time / get_global_vars_interval_per_tick());
+}
+
+float ticks_to_time(int ticks)
+{
+    return get_global_vars_interval_per_tick() * ticks;
 }
 
 static struct user_cmd dummy_cmd;
@@ -213,7 +219,111 @@ void draw_predicted_movement()
     set_global_vars_frametime(old_frame_time);
 }
 
+int get_tick_base_prediction(struct user_cmd *cmd, void *localplayer)
+{
+    static int tick = 0;
+    static struct user_cmd *last_cmd = NULL;
 
+    if (cmd)
+    {
+        if (!last_cmd || last_cmd->has_been_predicted)
+        {
+            tick = get_tick_base(localplayer);
+        }
+        else
+        {
+            tick++;
+        }
+    }
+
+    return tick;
+}
+
+void start_prediction(struct user_cmd *user_cmd)
+{
+    void *localplayer = get_localplayer();
+    
+    if (!localplayer || get_ent_lifestate(localplayer) != 1)
+    {
+        return;
+    }
+
+    // Basically going to rebuild CPrediction::RunCommand here
+
+
+    // StartCommand( player, ucmd )
+    
+    // ResetInstanceCounters -- dis gonna be a bitch to find unless vprof exports the string
+    set_current_command(localplayer, user_cmd);
+    // SetPredictionRadomSeed
+    // int *random_seed = sig scan for the old seed (?) maybe just use cmd->random_seed?
+    // int old_random_seed = *random_seed (?) might not need this 
+    // *random_seed = md5_pseudo_random(cmd->cmd_number & __INT_MAX__ (?))
+    // Maybe SetPredictionPlayer?
+
+    float old_curtime = get_global_vars_curtime();
+    float old_frametime = get_global_vars_frametime();
+    int old_tickcount = get_global_vars_tickcount();
+
+    int old_tickbase = get_tick_base(localplayer);
+    bool old_is_first_prediction = get_first_time_predicted();
+    bool old_in_prediction = get_in_prediction();
+
+    set_global_vars_curtime(ticks_to_time(get_tick_base_prediction(user_cmd, localplayer)));
+    set_global_vars_frametime(get_engine_paused() ? 0.0f : get_global_vars_interval_per_tick());
+    set_global_vars_tickcount(get_tick_base_prediction(user_cmd, localplayer));
+
+    set_first_time_predicted(false);
+    set_in_prediction(true);
+
+    // gamemovement->StartTrackPredictionErrors( player )
+    // set_player_button_state(localplayer, user_cmd->buttons);
+    // set_local_view_angles(localplayer, user_cmd->viewangles);
+
+    // RunPreThink( player )
+    // if (!player->PhysicsRunThink(0))
+    // {
+    //     player->PreThink(); -- virtual
+    // }
+
+    // RunThink( player, TICK_INTERVAL )
+    // int thinktick = get_player_next_tick_think(localplayer);
+    // if (thinktick > 0 && thinktick <= get_global_vars_tickcount())
+    // {
+    //     player->SetNextThink(TICK_NEVER_THINK (-1), NULL);
+    //     player->Think();
+    // }
+
+    // movehelper->sethost(localplayer)
+
+    // iprediction->SetupMove( player, ucmd, movehelper, &movedata )
+    // gamemovement->ProcessMovement( player, &movedata )
+    // iprediction->FinishMove( player, ucmd, &movedata )
+
+    // player->PostThink()
+    // set_tickbase(localplayer, old_tickbase);
+
+    set_in_prediction(old_in_prediction);
+    set_first_time_predicted(old_is_first_prediction);
+}
+
+void end_prediction()
+{
+    void *localplayer = get_localplayer();
+    
+    if (!localplayer || get_ent_lifestate(localplayer) != 1)
+    {
+        return;
+    }
+
+    // movehelper->sethost(NULL);
+    // set_global_vars_curtime(old_curtime);
+    // set_global_vars_frametime(old_frametime);
+    // set_global_vars_tickcount(old_tickcount);
+    set_current_command(localplayer, NULL);
+
+    // *random_seed = -1;
+}
 
 
 
