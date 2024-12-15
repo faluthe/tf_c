@@ -3,6 +3,7 @@
 #include "hooks/paint_traverse/paint_traverse.h"
 #include "interfaces/interfaces.h"
 #include "source_sdk/estimate_abs_velocity/estimate_abs_velocity.h"
+#include "source_sdk/engine_client/engine_client.h"
 #include "utils/utils.h"
 
 #include <stdio.h>

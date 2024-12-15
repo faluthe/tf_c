@@ -5,6 +5,8 @@
 #include "../../source_sdk/user_cmd.h"
 #include "../paint_traverse/paint_traverse.h"
 #include "create_move.h"
+#include "../../source_sdk/cvar/convar/convar.h"
+#include "../../source_sdk/cvar/cvar.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -26,19 +28,24 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         log_msg("CreateMove hooked!\n");
         hooked = true;
     }
-
+    
     if (!is_in_game())
     {
         return rc;
     }
 
     void *localplayer = get_localplayer();
-    
+
     if (!localplayer)
     {
         log_msg("localplayer is NULL\n");
         return rc;
     }
+
+    if (config.aimbot.key.do_thirdperson == true)
+      set_thirdperson(localplayer, true);
+    else
+      set_thirdperson(localplayer, false);
     
     if (user_cmd->tick_count > 1)
     {

@@ -24,6 +24,7 @@ struct config
             int code;
             int is_mouse_btn;
             bool is_pressed;
+	    bool do_thirdperson;
         } key;
         struct
         {

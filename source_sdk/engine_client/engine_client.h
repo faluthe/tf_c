@@ -11,3 +11,4 @@ __int32_t get_max_clients();
 void get_screen_size(int *width, int *height);
 __int8_t is_in_game();
 __int8_t get_player_info(int ent_index, struct player_info_t *pinfo);
+void clientcmd_unrestricted(const char *command);

@@ -37,6 +37,14 @@ void get_input(struct nk_context *ctx)
     }
 }
 
+void get_thirdperson_key(struct nk_context *ctx)
+{
+    if (nk_input_is_key_released(&ctx->input, NK_KEY_SHIFT))
+    {
+	config.aimbot.key.do_thirdperson = !config.aimbot.key.do_thirdperson;
+    }
+}
+
 void set_style(struct nk_context *ctx)
 {
     struct nk_color table[NK_COLOR_COUNT];
@@ -78,6 +86,7 @@ void swap_window_hook(void *window)
     SDL_GL_MakeCurrent(window, new_ctx);
     
     get_input(ctx);
+    get_thirdperson_key(ctx);
     watermark(ctx);
 
     if (menu_focused)
