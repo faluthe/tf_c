@@ -63,6 +63,8 @@ struct config
         int player_health_bar;
         int player_bounding_box;
         int player_name;
+        int team_color;
+        struct nk_colorf esp_color;
         // Other Entity ESP
         int ammo_hp_ents_name;
         int ammo_hp_ents_bounding_box;
