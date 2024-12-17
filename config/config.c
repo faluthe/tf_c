@@ -12,7 +12,7 @@ bool init_config()
 {
     FILE *config_file = fopen(config_path, "rb");
 
-    if (config_file == NULL)
+    if (config_file == NULL || !fread(&config, sizeof(struct config), 1, config_file))
     {
         config.aimbot.key.is_pressed = false;
 
@@ -51,12 +51,6 @@ bool init_config()
         config.esp.friendly_dispenser_bounding_box = 1;
 
         return save_config();
-    }
-    
-    if (!fread(&config, sizeof(struct config), 1, config_file))
-    {
-        fclose(config_file);
-        return false;
     }
 
     fclose(config_file);
