@@ -42,7 +42,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         return rc;
     }
 
-    if (config.aimbot.key.do_thirdperson == true)
+    if (config.misc.do_thirdperson == true)
       set_thirdperson(localplayer, true);
     else
       set_thirdperson(localplayer, false);
@@ -54,7 +54,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
     }
 
     // If player is not on ground unset jump button flag (breaks scout double jump)
-    if ((get_ent_flags(localplayer) & 1) == 0 && config.bunny_hop)
+    if (config.misc.bunny_hop && (get_ent_flags(localplayer) & 1) == 0)
     {
         user_cmd->buttons &= ~2;
     }

@@ -11,7 +11,11 @@
 
 struct config
 {
-    int bunny_hop;
+    struct
+    {
+        int bunny_hop;
+        bool do_thirdperson;
+    } misc;
     struct
     {
         int aimbot_enabled;
@@ -24,7 +28,6 @@ struct config
             int code;
             int is_mouse_btn;
             bool is_pressed;
-	    bool do_thirdperson;
         } key;
         struct
         {

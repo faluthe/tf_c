@@ -210,7 +210,7 @@ void draw_esp_tab(struct nk_context *ctx)
 void draw_misc_tab(struct nk_context *ctx)
 {
     nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Bunny hop", &config.bunny_hop);
+    nk_checkbox_label(ctx, "Bunny hop", &config.misc.bunny_hop);
 
     nk_layout_row_dynamic(ctx, 20, 1);
     if (nk_button_label(ctx, "Save config"))

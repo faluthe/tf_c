@@ -41,7 +41,7 @@ void get_thirdperson_key(struct nk_context *ctx)
 {
     if (nk_input_is_key_released(&ctx->input, NK_KEY_SHIFT))
     {
-	config.aimbot.key.do_thirdperson = !config.aimbot.key.do_thirdperson;
+	config.misc.do_thirdperson = !config.misc.do_thirdperson;
     }
 }
 

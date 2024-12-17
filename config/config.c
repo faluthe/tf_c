@@ -16,7 +16,8 @@ bool init_config()
     {
         config.aimbot.key.is_pressed = false;
 
-        config.bunny_hop = 1;
+        config.misc.bunny_hop = 1;
+        config.misc.do_thirdperson = false;
         config.aimbot.aimbot_enabled = 1;
         config.aimbot.draw_fov = 1;
         config.aimbot.fov = 10.0f;
@@ -25,7 +26,6 @@ bool init_config()
         config.aimbot.key.code = SDL_BUTTON_X1;
         config.aimbot.key.is_mouse_btn = true;
         config.aimbot.key.is_pressed = false;
-	config.aimbot.key.do_thirdperson = false;
         config.aimbot.projectile_preview.draw_line = 1;
         config.aimbot.projectile_preview.line_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
         config.aimbot.projectile_preview.draw_box = 1;
