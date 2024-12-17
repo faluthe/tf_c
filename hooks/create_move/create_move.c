@@ -1,12 +1,12 @@
 #include "../../config/config.h"
 #include "../../utils/utils.h"
+#include "../../source_sdk/cvar/convar/convar.h"
+#include "../../source_sdk/cvar/cvar.h"
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/user_cmd.h"
 #include "../paint_traverse/paint_traverse.h"
 #include "create_move.h"
-#include "../../source_sdk/cvar/convar/convar.h"
-#include "../../source_sdk/cvar/cvar.h"
 
 #include <math.h>
 #include <stdbool.h>
