@@ -60,3 +60,11 @@ __int8_t get_player_info(int ent_index, struct player_info_t *pinfo)
 
     return func(interface, ent_index, pinfo);
 }
+
+void clientcmd_unrestricted(const char *command)
+{
+    void **vtable = *(void ***)interface;
+    __int8_t (*func)(void *, const char *command) = vtable[106];
+
+    func(interface, command);     
+}

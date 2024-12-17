@@ -47,6 +47,13 @@ void draw_aimbot_fov()
 
 void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8_t allow_force)
 {
+    const char *panel_name = get_panel_name(panel);
+
+    if (config.misc.do_thirdperson && strcmp(panel_name, "HudScope") == 0)
+    {
+        return;
+    }
+    
     paint_traverse_original(this, panel, force_repaint, allow_force);
     
     static bool hooked = false;
@@ -61,8 +68,6 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
 
         hooked = true;
     }
-
-    const char *panel_name = get_panel_name(panel);
 
     if (strcmp(panel_name, "FocusOverlayPanel") != 0)
     {

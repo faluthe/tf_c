@@ -1,6 +1,7 @@
 #include "../utils/utils.h"
 #include "interfaces.h"
 
+#include "../source_sdk/cvar/cvar.h"
 #include "../source_sdk/debug_overlay/debug_overlay.h"
 #include "../source_sdk/engine_client/engine_client.h"
 #include "../source_sdk/engine_trace/engine_trace.h"
@@ -26,6 +27,7 @@ void **vgui_panel_vtable = NULL;
 static const char *client_version = "VClient017";
 static const char *debug_overlay_version = "VDebugOverlay003";
 static const char *engine_client_version = "VEngineClient014";
+static const char *engine_cvar_version = "VEngineCvar004";
 static const char *engine_trace_version = "EngineTraceClient003";
 static const char *entity_list_version = "VClientEntityList003";
 static const char *surface_version = "VGUI_Surface030";
@@ -82,8 +84,9 @@ bool init_interfaces()
     CreateInterfaceFn engine_factory = get_factory(bin_path, "engine.so");
     CreateInterfaceFn surface_factory = get_factory(bin_path, "vguimatsurface.so");
     CreateInterfaceFn vgui_factory = get_factory(bin_path, "vgui2.so");
+    CreateInterfaceFn cvar_factory = get_factory(bin_path, "libvstdlib.so");
 
-    if (!client_factory || !engine_factory || !surface_factory || !vgui_factory)
+    if (!client_factory || !engine_factory || !surface_factory || !vgui_factory || !cvar_factory)
     {
         log_msg("Failed to get all factories\n");
         return false;
@@ -96,8 +99,9 @@ bool init_interfaces()
     void *entity_list_interface = get_interface(client_factory, entity_list_version);
     void *surface_interface = get_interface(surface_factory, surface_version);
     void *vgui_panel_interface = get_interface(vgui_factory, vgui_panel_version);
+    void *cvar_interface = get_interface(cvar_factory, engine_cvar_version);
 
-    if (!client_interface || !engine_client_interface || !entity_list_interface || !surface_interface || !vgui_panel_interface || !debug_overlay_interface || !engine_trace_interface)
+    if (!client_interface || !engine_client_interface || !entity_list_interface || !surface_interface || !vgui_panel_interface || !debug_overlay_interface || !engine_trace_interface || !cvar_interface)
     {
         log_msg("Failed to get all interfaces\n");
         return false;
@@ -109,7 +113,8 @@ bool init_interfaces()
     set_panel_interface(vgui_panel_interface);
     set_debug_overlay_interface(debug_overlay_interface);
     set_engine_trace_interface(engine_trace_interface);
-
+    set_cvar_interface(cvar_interface);
+    
     vgui_panel_vtable = *(void ***)vgui_panel_interface;
 
     /*

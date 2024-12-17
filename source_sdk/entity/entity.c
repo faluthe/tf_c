@@ -208,3 +208,8 @@ struct vec3_t get_shoot_pos(void* entity)
 
     return func(entity);
 }
+
+void set_thirdperson(void *entity, bool value)
+{
+  *(bool *)((__uint64_t)(entity) + 0x240C) = value;
+}
