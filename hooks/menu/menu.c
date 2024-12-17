@@ -4,18 +4,69 @@
 
 #include <stdbool.h>
 
+#define HEADER_SIZE 40
+#define ROW_SIZE 20
+
+#define NK_TEXT_ROW(ctx, text, flags)               \
+    do {                                            \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 1);  \
+        nk_label((ctx), (text), (flags));           \
+    } while(0)                                      \
+
+#define NK_HEADER_ROW(ctx, text, flags)                 \
+    do {                                                \
+        nk_layout_row_dynamic((ctx), HEADER_SIZE, 1);   \
+        nk_label((ctx), (text), (flags));               \
+    } while(0)                                          \
+
+#define NK_CHECKBOX_ROW(ctx, text, active_ptr)          \
+    do {                                                \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 1);      \
+        nk_checkbox_label((ctx), (text), (active_ptr)); \
+    } while(0)                                          \
+
+#define NK_FLOAT_SLIDER_ROW(ctx, text, value_ptr, min, max, step) \
+    do {                                                          \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 2);                \
+        nk_label((ctx), (text), NK_TEXT_LEFT);                    \
+        nk_slider_float((ctx), (min), (value_ptr), (max), (step));\
+    } while(0)                                                    \
+
+#define NK_COLOR_PICKER_ROW(ctx, text, color_ptr)                                                       \
+    do {                                                                                                \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 2);                                                      \
+        nk_label((ctx), (text), NK_TEXT_LEFT);                                                          \
+        if (nk_combo_begin_color((ctx), nk_rgb_cf(*(color_ptr)), nk_vec2(nk_widget_width(ctx), 400))) { \
+            nk_layout_row_dynamic((ctx), 120, 1);                                                       \
+            *(color_ptr) = nk_color_picker((ctx), *(color_ptr), NK_RGBA);                               \
+            nk_layout_row_dynamic((ctx), 25, 1);                                                        \
+            nk_combo_end(ctx);                                                                          \
+        }                                                                                               \
+    } while(0)                                                                                          \
+
+#define NK_COMBO_BOX_ROW(ctx, id_token, label, text_options, options_count, ...)                                            \
+    do {                                                                                                                    \
+        static const char **id_token##_options = text_options;                                                              \
+        static int *id_token##_selections[] = { __VA_ARGS__ };                                                              \
+        static char id_token##_preview_text[128] = "";                                                                      \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 2);                                                                          \
+        nk_label((ctx), (label), NK_TEXT_LEFT);                                                                             \
+        multi_select_combo_box((ctx), id_token##_options, id_token##_selections, options_count, id_token##_preview_text);   \
+    } while(0)                                                                                                              \
+
 void watermark(struct nk_context *ctx)
 {
     if (nk_begin(ctx, "watermark", nk_rect(10, 10, 150, 30), NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT | NK_WINDOW_NO_SCROLLBAR))
     {
-        nk_layout_row_dynamic(ctx, 20, 1);
-        nk_label(ctx, "TF_C by faluthe", NK_TEXT_CENTERED);
+        NK_TEXT_ROW(ctx, "TF_C by faluthe", NK_TEXT_CENTERED);
     }
     nk_end(ctx);
 }
 
-void multi_select_combo_box(struct nk_context *ctx, const char **options, int options_count, int **selections, int selection_count, char *preview_text, int preview_text_size)
+void multi_select_combo_box(struct nk_context *ctx, const char **options, int **selections, int options_count, char *preview_text)
 {
+    const int preview_text_size = 128;
+
     preview_text[0] = '\0';
     for (int k = 0; k < options_count; k++)
     {
@@ -66,13 +117,52 @@ void multi_select_combo_box(struct nk_context *ctx, const char **options, int op
 
 void draw_aim_tab(struct nk_context *ctx)
 {
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_checkbox_label(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
-    if (config.aimbot.aimbot_enabled)
+    NK_HEADER_ROW(ctx, "General", NK_TEXT_LEFT);
     {
-        nk_checkbox_label(ctx, "Use aim key", &config.aimbot.key.use_key);
+        char fov_text[32];
+        // \xC2\xB0 is the UTF-8 encoding for the degree symbol
+        sprintf(fov_text, "Aimbot FOV: %.0f\xC2\xB0", config.aimbot.fov);
+        
+        NK_CHECKBOX_ROW(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
+        NK_CHECKBOX_ROW(ctx, "Use aim key", &config.aimbot.key.use_key);
+        NK_FLOAT_SLIDER_ROW(ctx, "Aimbot FOV", &config.aimbot.fov, 1.0f, 50.0f, 1.0f);
+        NK_CHECKBOX_ROW(ctx, "Draw FOV", &config.aimbot.draw_fov);
+        if (config.aimbot.draw_fov)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "FOV color:", &config.aimbot.fov_color);
+        }
     }
 
+    NK_HEADER_ROW(ctx, "Projectile", NK_TEXT_LEFT);
+    {
+        static const char *proj_preview_options[] = { "Trace line", "3D Box", "Only draw on target" };
+        static const char *previous_shot_options[] = { "Trace line", "3D Box", "Timer" };
+
+        NK_COMBO_BOX_ROW(ctx, projectile_preview, "Projectile preview:", proj_preview_options, 3, &config.aimbot.projectile_preview.draw_line, &config.aimbot.projectile_preview.draw_box, &config.aimbot.projectile_preview.only_draw_if_target);
+        if (config.aimbot.projectile_preview.draw_line)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Line color:", &config.aimbot.projectile_preview.line_color);
+        }
+        if (config.aimbot.projectile_preview.draw_box)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Box color:", &config.aimbot.projectile_preview.box_color);
+        }
+        NK_COMBO_BOX_ROW(ctx, previous_shot_preview, "Previous shot preview:", previous_shot_options, 3, &config.aimbot.projectile_preview.previous_shot_line, &config.aimbot.projectile_preview.previous_shot_box, &config.aimbot.projectile_preview.draw_timer);
+        if (config.aimbot.projectile_preview.previous_shot_line)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Previous shot line color:", &config.aimbot.projectile_preview.previous_shot_line_color);
+        }
+        if (config.aimbot.projectile_preview.previous_shot_box)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Previous shot box color:", &config.aimbot.projectile_preview.previous_shot_box_color);
+        }
+        if (config.aimbot.projectile_preview.draw_timer)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Timer color:", &config.aimbot.projectile_preview.timer_color);
+        }
+    }
+
+    // TBD: Macro this
     nk_layout_row_dynamic(ctx, 20, 2);
     nk_label(ctx, "Aimbot key: ", NK_TEXT_LEFT);
     char key_edit_buffer[64];
@@ -100,172 +190,59 @@ void draw_aim_tab(struct nk_context *ctx)
     {
         config.aimbot.key.binding.editing = 1;
     }
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    char fov_text[32];
-    sprintf(fov_text, "Aimbot FOV: %.0f\xC2\xB0", config.aimbot.fov);
-    nk_label(ctx, fov_text, NK_TEXT_LEFT);
-    nk_slider_float(ctx, 1.0f, &config.aimbot.fov, 50.0f, 1.0f);
-    
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Draw FOV", &config.aimbot.draw_fov);
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "FOV color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.fov_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.fov_color = nk_color_picker(ctx, config.aimbot.fov_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
-
-    nk_layout_row_dynamic(ctx, 30, 1);
-    nk_label(ctx, "Projectile preview", NK_TEXT_LEFT);
-
-    static const char *proj_preview_options[] = { "Trace line", "3D Box" };
-    static int *proj_preview_selections[] = { &config.aimbot.projectile_preview.draw_line, &config.aimbot.projectile_preview.draw_box };
-    static char proj_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Preview type:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, proj_preview_options, 2, proj_preview_selections, 2, proj_preview_text, sizeof(proj_preview_text));
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Line color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.line_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.projectile_preview.line_color = nk_color_picker(ctx, config.aimbot.projectile_preview.line_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Box color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.box_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.projectile_preview.box_color = nk_color_picker(ctx, config.aimbot.projectile_preview.box_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Only draw if target exists", &config.aimbot.projectile_preview.only_draw_if_target);
-
-    static int *previous_shot_selections[] = { &config.aimbot.projectile_preview.previous_shot_line, &config.aimbot.projectile_preview.previous_shot_box };
-    static char previous_shot_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Previous shot preview:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, proj_preview_options, 2, previous_shot_selections, 2, previous_shot_preview_text, sizeof(previous_shot_preview_text));
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Previous shot line color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.previous_shot_line_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.projectile_preview.previous_shot_line_color = nk_color_picker(ctx, config.aimbot.projectile_preview.previous_shot_line_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Previous shot box color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.previous_shot_box_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.projectile_preview.previous_shot_box_color = nk_color_picker(ctx, config.aimbot.projectile_preview.previous_shot_box_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Draw timer", &config.aimbot.projectile_preview.draw_timer);
-
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Timer color:", NK_TEXT_LEFT);
-    if (nk_combo_begin_color(ctx, nk_rgb_cf(config.aimbot.projectile_preview.timer_color), nk_vec2(nk_widget_width(ctx), 400))) {
-        nk_layout_row_dynamic(ctx, 120, 1);
-        config.aimbot.projectile_preview.timer_color = nk_color_picker(ctx, config.aimbot.projectile_preview.timer_color, NK_RGBA);
-        nk_layout_row_dynamic(ctx, 25, 1);
-        nk_combo_end(ctx);
-    }
 }
 
 void draw_esp_tab(struct nk_context *ctx)
 {
-    static const char *entity_esp_options[] = { "Name", "Bounding box" };
+    NK_HEADER_ROW(ctx, "Enemy Player ESP", NK_TEXT_LEFT);
+    {
+        NK_CHECKBOX_ROW(ctx, "Health bar", &config.esp.player_health_bar);
+        NK_CHECKBOX_ROW(ctx, "Bounding box", &config.esp.player_bounding_box);
+        NK_CHECKBOX_ROW(ctx, "Name", &config.esp.player_name);
+    }
 
-    nk_layout_row_dynamic(ctx, 30, 1);
-    nk_label(ctx, "Enemy Player ESP", NK_TEXT_LEFT);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Health bar", &config.esp.player_health_bar);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Bounding box", &config.esp.player_bounding_box);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Name", &config.esp.player_name);
-
-    nk_layout_row_dynamic(ctx, 30, 1);
-    nk_label(ctx, "Entity ESP", NK_TEXT_LEFT);
-
-    static int *ammo_hp_selections[] = { &config.esp.ammo_hp_ents_name, &config.esp.ammo_hp_ents_bounding_box };
-    static char ammo_hp_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Ammo/HP:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, entity_esp_options, 2, ammo_hp_selections, 2, ammo_hp_preview_text, sizeof(ammo_hp_preview_text));
-
-    static int *sentry_selections[] = { &config.esp.sentry_name, &config.esp.sentry_bounding_box };
-    static char sentry_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Sentry:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, entity_esp_options, 2, sentry_selections, 2, sentry_preview_text, sizeof(sentry_preview_text));
-
-    static int *teleporter_selections[] = { &config.esp.teleporter_name, &config.esp.teleporter_bounding_box };
-    static char teleporter_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Teleporter:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, entity_esp_options, 2, teleporter_selections, 2, teleporter_preview_text, sizeof(teleporter_preview_text));
-
-    static int *dispenser_selections[] = { &config.esp.dispenser_name, &config.esp.dispenser_bounding_box };
-    static char dispenser_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Dispenser:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, entity_esp_options, 2, dispenser_selections, 2, dispenser_preview_text, sizeof(dispenser_preview_text));
-    
-    static int *friendly_dispenser_selections[] = { &config.esp.friendly_dispenser_name, &config.esp.friendly_dispenser_bounding_box };
-    static char friendly_dispenser_preview_text[128] = "";
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Friendly dispenser:", NK_TEXT_LEFT);
-    multi_select_combo_box(ctx, entity_esp_options, 2, friendly_dispenser_selections, 2, friendly_dispenser_preview_text, sizeof(friendly_dispenser_preview_text));
+    NK_HEADER_ROW(ctx, "Entity ESP", NK_TEXT_LEFT);
+    {
+        static const char *entity_esp_options[] = { "Name", "Bounding box" };
+        NK_COMBO_BOX_ROW(ctx, ammo_hp, "Ammo/HP:", entity_esp_options, 2, &config.esp.ammo_hp_ents_name, &config.esp.ammo_hp_ents_bounding_box);
+        NK_COMBO_BOX_ROW(ctx, sentry, "Sentry:", entity_esp_options, 2, &config.esp.sentry_name, &config.esp.sentry_bounding_box);
+        NK_COMBO_BOX_ROW(ctx, teleporter, "Teleporter:", entity_esp_options, 2, &config.esp.teleporter_name, &config.esp.teleporter_bounding_box);
+        NK_COMBO_BOX_ROW(ctx, dispenser, "Dispenser:", entity_esp_options, 2, &config.esp.dispenser_name, &config.esp.dispenser_bounding_box);
+        NK_COMBO_BOX_ROW(ctx, friendly_dispenser, "Friendly dispenser:", entity_esp_options, 2, &config.esp.friendly_dispenser_name, &config.esp.friendly_dispenser_bounding_box);
+    }
 }
 
 void draw_misc_tab(struct nk_context *ctx)
 {
-    nk_layout_row_dynamic(ctx, 20, 1);
-    nk_checkbox_label(ctx, "Bunny hop", &config.misc.bunny_hop);
-
-    nk_layout_row_dynamic(ctx, 20, 1);
-    if (nk_button_label(ctx, "Save config"))
+    NK_HEADER_ROW(ctx, "General", NK_TEXT_LEFT);
     {
-        if (!save_config())
+        NK_CHECKBOX_ROW(ctx, "Bunny hop", &config.misc.bunny_hop);
+        // TBD: Add thirdperson key stuff + bool
+        nk_layout_row_dynamic(ctx, 20, 1);
+        if (nk_button_label(ctx, "Save config"))
         {
-            log_msg("Failed to save config\n");
+            if (!save_config())
+            {
+                log_msg("Failed to save config\n");
+            }
+            else
+            {
+                log_msg("Config saved\n");
+            }
         }
-        else
-        {
-            log_msg("Config saved\n");
-        }
-    }
 
-    nk_layout_row_dynamic(ctx, 20, 1);
-    if (nk_button_label(ctx, "Load config"))
-    {
-        log_msg("Loading config\n");
-        if (!init_config())
+        nk_layout_row_dynamic(ctx, 20, 1);
+        if (nk_button_label(ctx, "Load config"))
         {
-            log_msg("Failed to save config\n");
-        }
-        else
-        {
-            log_msg("Config loaded\n");
+            log_msg("Loading config\n");
+            if (!init_config())
+            {
+                log_msg("Failed to save config\n");
+            }
+            else
+            {
+                log_msg("Config loaded\n");
+            }
         }
     }
 }
