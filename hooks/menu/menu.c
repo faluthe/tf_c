@@ -2,6 +2,8 @@
 #include "../../utils/utils.h"
 #include "menu.h"
 
+#include <stdbool.h>
+
 void watermark(struct nk_context *ctx)
 {
     if (nk_begin(ctx, "watermark", nk_rect(10, 10, 150, 30), NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT | NK_WINDOW_NO_SCROLLBAR))
@@ -69,6 +71,34 @@ void draw_aim_tab(struct nk_context *ctx)
     if (config.aimbot.aimbot_enabled)
     {
         nk_checkbox_label(ctx, "Use aim key", &config.aimbot.key.use_key);
+    }
+
+    nk_layout_row_dynamic(ctx, 20, 2);
+    nk_label(ctx, "Aimbot key: ", NK_TEXT_LEFT);
+    char key_edit_buffer[64];
+    if (config.aimbot.key.binding.editing)
+    {
+        snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Press a key/mouse button");
+    }
+    else
+    {
+        if (config.aimbot.key.binding.type == INPUT_KEY)
+        {
+            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Key: %d", config.aimbot.key.binding.code);
+        }
+        else if (config.aimbot.key.binding.type == INPUT_MOUSE)
+        {
+            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Mouse: %d", config.aimbot.key.binding.code);
+        }
+        else
+        {
+            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "None");
+        }
+    }
+
+    if (nk_button_label(ctx, key_edit_buffer))
+    {
+        config.aimbot.key.binding.editing = 1;
     }
 
     nk_layout_row_dynamic(ctx, 20, 2);

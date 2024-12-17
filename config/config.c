@@ -23,8 +23,7 @@ bool init_config()
         config.aimbot.fov = 10.0f;
         config.aimbot.fov_color = (struct nk_colorf){ 207.0f / 255.0f, 115.0f / 255.0f, 54.0f / 255.0f, 0.25f };
         config.aimbot.key.use_key = 1;
-        config.aimbot.key.code = SDL_BUTTON_X1;
-        config.aimbot.key.is_mouse_btn = true;
+        config.aimbot.key.binding = (struct key_binding){ INPUT_MOUSE, SDL_BUTTON_X2, false };
         config.aimbot.key.is_pressed = false;
         config.aimbot.projectile_preview.draw_line = 1;
         config.aimbot.projectile_preview.line_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };

@@ -109,15 +109,57 @@ int poll_event_hook(SDL_Event *event)
 
     if (ret && nk_sdl_handle_event(event) && menu_focused)
     {
+        // TBD: Make an array for keybinds
+        if (config.aimbot.key.binding.editing)
+        {
+            const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
+
+            for (int i = 0; i < SDL_NUM_SCANCODES; i++)
+            {
+                if (keyboard_state[i])
+                {
+                    if (i == SDL_SCANCODE_ESCAPE)
+                    {
+                        config.aimbot.key.binding.code = 0;
+                        config.aimbot.key.binding.type = INPUT_NONE;
+                    }
+                    else
+                    {
+                        config.aimbot.key.binding.code = i;
+                        config.aimbot.key.binding.type = INPUT_KEY;
+                    }
+                    config.aimbot.key.binding.editing = 0;
+
+                    // TBD: Use SDL_GetScancodeName(i) to pretty print the key in menu
+                    break;
+                }
+            }
+        }
+
+        if (config.aimbot.key.binding.editing)
+        {
+            Uint32 mouse_state = SDL_GetMouseState(NULL, NULL);
+            
+            for (int i = SDL_BUTTON_LEFT; i <= SDL_BUTTON_X2; i++)
+            {
+                if (mouse_state & SDL_BUTTON(i))
+                {
+                    config.aimbot.key.binding.code = i;
+                    config.aimbot.key.binding.type = INPUT_MOUSE;
+                    config.aimbot.key.binding.editing = 0;
+                }
+            }
+        }
+
         event->type = 0;
 
         return ret;
     }
 
-    if (config.aimbot.key.is_mouse_btn)
+    if (config.aimbot.key.binding.type == INPUT_MOUSE)
     {
         Uint32 mouse_state = SDL_GetMouseState(NULL, NULL);
-        if (mouse_state & SDL_BUTTON(config.aimbot.key.code))
+        if (mouse_state & SDL_BUTTON(config.aimbot.key.binding.code))
         {
             config.aimbot.key.is_pressed = true;
         }
@@ -125,6 +167,22 @@ int poll_event_hook(SDL_Event *event)
         {
             config.aimbot.key.is_pressed = false;
         }
+    }
+    else if (config.aimbot.key.binding.type == INPUT_KEY)
+    {
+        const Uint8 *keyboard_state = SDL_GetKeyboardState(NULL);
+        if (keyboard_state && keyboard_state[config.aimbot.key.binding.code])
+        {
+            config.aimbot.key.is_pressed = true;
+        }
+        else
+        {
+            config.aimbot.key.is_pressed = false;
+        }
+    }
+    else
+    {
+        config.aimbot.key.is_pressed = false;
     }
 
     return ret;

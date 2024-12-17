@@ -9,6 +9,20 @@
 
 #include <stdbool.h>
 
+enum input_type
+{
+    INPUT_NONE,
+    INPUT_KEY,
+    INPUT_MOUSE,
+};
+
+struct key_binding
+{
+    enum input_type type;
+    int code;
+    bool editing;
+};
+
 struct config
 {
     struct
@@ -25,8 +39,7 @@ struct config
         struct
         {
             int use_key;
-            int code;
-            int is_mouse_btn;
+            struct key_binding binding;
             bool is_pressed;
         } key;
         struct
