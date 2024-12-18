@@ -88,16 +88,21 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
             continue;
         }
 
-        float predicted_time;
+        float predicted_time = -1.0f;
         struct vec3_t aim_pos;
         if (ent_index <= max_clients && get_ent_lifestate(entity) == 1)
         {
             struct vec3_t ent_velocity;
             struct vec3_t ent_pos = get_ent_origin(entity);
             bool ent_in_air = (get_ent_flags(entity) & 1) == 0;
+
+            if (ent_in_air)
+            {
+                ent_pos = get_bone_pos(entity, 1);
+            }
             
             estimate_abs_velocity(entity, &ent_velocity);
-            predicted_time = get_rocket_predicted_time(ent_velocity, get_difference(ent_pos, *shoot_pos), ent_in_air, project_speed_per_second(weapon_id));
+            predicted_time = get_rocket_predicted_time(ent_velocity, get_difference(*shoot_pos, ent_pos), ent_in_air, project_speed_per_second(weapon_id));
 
             if (predicted_time == -1.0f)
             {
@@ -112,7 +117,7 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
 
             if (ent_in_air)
             {
-                rocket_predicted_pos.z += (ent_velocity.z * predicted_time) - (0.5f * 800 * (predicted_time * predicted_time));
+                rocket_predicted_pos.z = ent_pos.z + (ent_velocity.z * predicted_time) - (0.5f * 800 * (predicted_time * predicted_time));
             }
 
             if (!is_pos_visible(localplayer, shoot_pos, rocket_predicted_pos))
