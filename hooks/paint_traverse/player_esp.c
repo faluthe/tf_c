@@ -41,17 +41,17 @@ void draw_2d_box(void *entity, int ent_index)
 
         int team = get_ent_team(entity);
         
-        if(team == 2) { //red
-            r = 255;
-            g = 0;
-            b = 0;
+        if(team == 2) {
+            r = 184;
+            g = 56;
+            b = 59;
             a = 255;
         }
         
-        if(team == 3){ //blue
-            r = 0;
-            g = 0;
-            b = 255;
+        if(team == 3){
+            r = 88;
+            g = 133;
+            b = 162;
             a = 255;
         }
 
