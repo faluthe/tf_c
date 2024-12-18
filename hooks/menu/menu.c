@@ -197,8 +197,16 @@ void draw_esp_tab(struct nk_context *ctx)
     NK_HEADER_ROW(ctx, "Enemy Player ESP", NK_TEXT_LEFT);
     {
         NK_CHECKBOX_ROW(ctx, "Health bar", &config.esp.player_health_bar);
-        NK_CHECKBOX_ROW(ctx, "Bounding box", &config.esp.player_bounding_box);
         NK_CHECKBOX_ROW(ctx, "Name", &config.esp.player_name);
+        NK_CHECKBOX_ROW(ctx, "Bounding box", &config.esp.player_bounding_box);
+        if (config.esp.player_bounding_box)
+        {
+            NK_CHECKBOX_ROW(ctx, "Team color box", &config.esp.team_color);
+            if (!config.esp.team_color)
+            {
+                NK_COLOR_PICKER_ROW(ctx, "Box color:", &config.esp.esp_color);
+            }
+        }
     }
 
     NK_HEADER_ROW(ctx, "Entity ESP", NK_TEXT_LEFT);
