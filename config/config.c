@@ -39,6 +39,8 @@ bool init_config()
         config.esp.player_health_bar = 1;
         config.esp.player_bounding_box = 1;
         config.esp.player_name = 1;
+        config.esp.team_color = 1;
+        config.esp.esp_color = (struct nk_colorf){ 1.0f, 1.0f, 1.0f, 1.0f};
         config.esp.ammo_hp_ents_name = 1;
         config.esp.ammo_hp_ents_bounding_box = 1;
         config.esp.sentry_name = 1;

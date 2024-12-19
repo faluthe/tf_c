@@ -29,10 +29,37 @@ void draw_2d_box(void *entity, int ent_index)
     box.top += height / 10; 
     box.right -= height / 10;
     height = box.bottom - box.top;
+
+
+    int r = config.esp.esp_color.r * 255;
+    int g = config.esp.esp_color.g * 255;
+    int b = config.esp.esp_color.b * 255;
+    int a = config.esp.esp_color.a * 255;
+
+
+    if(config.esp.team_color){
+
+        int team = get_ent_team(entity);
+        
+        if(team == 2) {
+            r = 184;
+            g = 56;
+            b = 59;
+            a = 255;
+        }
+        
+        if(team == 3){
+            r = 88;
+            g = 133;
+            b = 162;
+            a = 255;
+        }
+
+    }
     
     if (config.esp.player_bounding_box)
     {
-        draw_outlined_box(box, 255, 255, 255, 255);
+        draw_outlined_box(box, r, g, b, a);
     }
 
     if (config.esp.player_health_bar)
