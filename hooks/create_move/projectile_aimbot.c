@@ -301,7 +301,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 config.aimbot.projectile_preview.previous_shot_line_color.g * 255,
                 config.aimbot.projectile_preview.previous_shot_line_color.b * 255
             };
-            add_line_overlay(&shoot_pos, &result_pos, previous_shot_line_color.x, previous_shot_line_color.y, previous_shot_line_color.z, true, result_time);
+            add_line_overlay(&shoot_pos, &result_pos, previous_shot_line_color.x, previous_shot_line_color.y, previous_shot_line_color.z, true, result_time + config.aimbot.projectile_preview.previous_shot_linger_time);
         }
 
         if (config.aimbot.projectile_preview.previous_shot_box)
@@ -312,7 +312,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
                 config.aimbot.projectile_preview.previous_shot_box_color.g * 255,
                 config.aimbot.projectile_preview.previous_shot_box_color.b * 255
             };
-            add_box_overlay(&result_pos, &mins, &maxs, &orientation, box_color.x, box_color.y, box_color.z, box_alpha, result_time);
+            add_box_overlay(&result_pos, &mins, &maxs, &orientation, box_color.x, box_color.y, box_color.z, box_alpha, result_time + config.aimbot.projectile_preview.previous_shot_linger_time);
         }
     }
 

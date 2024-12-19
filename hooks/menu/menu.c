@@ -125,7 +125,7 @@ void draw_aim_tab(struct nk_context *ctx)
         
         NK_CHECKBOX_ROW(ctx, "Aimbot enabled", &config.aimbot.aimbot_enabled);
         NK_CHECKBOX_ROW(ctx, "Use aim key", &config.aimbot.key.use_key);
-        NK_FLOAT_SLIDER_ROW(ctx, "Aimbot FOV", &config.aimbot.fov, 1.0f, 50.0f, 1.0f);
+        NK_FLOAT_SLIDER_ROW(ctx, fov_text, &config.aimbot.fov, 1.0f, 50.0f, 1.0f);
         NK_CHECKBOX_ROW(ctx, "Draw FOV", &config.aimbot.draw_fov);
         if (config.aimbot.draw_fov)
         {
@@ -159,6 +159,13 @@ void draw_aim_tab(struct nk_context *ctx)
         if (config.aimbot.projectile_preview.draw_timer)
         {
             NK_COLOR_PICKER_ROW(ctx, "Timer color:", &config.aimbot.projectile_preview.timer_color);
+        }
+
+        if (config.aimbot.projectile_preview.previous_shot_box || config.aimbot.projectile_preview.previous_shot_line)
+        {
+            char previous_shot_linger_time_text[32];
+            sprintf(previous_shot_linger_time_text, "Previous shot linger time: %.2f", config.aimbot.projectile_preview.previous_shot_linger_time);
+            NK_FLOAT_SLIDER_ROW(ctx, previous_shot_linger_time_text, &config.aimbot.projectile_preview.previous_shot_linger_time, 0.0f, 2.0f, 0.05f);
         }
     }
 

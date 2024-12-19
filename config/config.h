@@ -55,6 +55,7 @@ struct config
             struct nk_colorf previous_shot_box_color;
             int draw_timer;
             struct nk_colorf timer_color;
+            float previous_shot_linger_time;
         } projectile_preview;
     } aimbot;
     struct
