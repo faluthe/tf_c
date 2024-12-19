@@ -53,10 +53,12 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         aimbot(localplayer, user_cmd);
     }
 
-    // If player is not on ground unset jump button flag (breaks scout double jump)
-    if (config.misc.bunny_hop && (get_ent_flags(localplayer) & 1) == 0)
-    {
-        user_cmd->buttons &= ~2;
+    if(config.misc.bunny_hop){
+    bhop(localplayer, user_cmd);
+    }
+
+    if(config.misc.autostrafe){
+        autostrafe(localplayer, user_cmd);
     }
 
     if (silent_aim)
