@@ -81,4 +81,5 @@ void paint_traverse_hook(void *this, void *panel, __int8_t force_repaint, __int8
     draw_render_queue();
     draw_timer_queue();
     draw_aimbot_fov();
+    draw_projectile_target_line();
 }

@@ -1,3 +1,4 @@
+#include "../../config/config.h"
 #include "../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../source_sdk/global_vars/global_vars.h"
 #include "../../source_sdk/surface/surface.h"
@@ -35,6 +36,7 @@ struct timer_t
 struct render_data_t render_queue[RENDER_QUEUE_SIZE];
 struct bbox_decorator_t bbox_queue[RENDER_QUEUE_SIZE];
 struct timer_t timer_queue[RENDER_QUEUE_SIZE];
+struct vec3_t projectile_target_line[1024];
 pthread_mutex_t render_queue_mutex = { 0 };
 
 void init_render_queue()
@@ -44,6 +46,11 @@ void init_render_queue()
     for (int i = 0; i < RENDER_QUEUE_SIZE; i++)
     {
         timer_queue[i].starttime = -1.0f;
+    }
+
+    for (int i = 0; i < 1024; i++)
+    {
+        projectile_target_line[i] = (struct vec3_t){ 0.0f, 0.0f, 0.0f };
     }
 }
 
@@ -100,6 +107,23 @@ void add_timer(struct vec3_t world_pos, struct vec3_t color, float starttime, fl
             timer_queue[i].color = color;
             timer_queue[i].starttime = starttime;
             timer_queue[i].endtime = endtime;
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&render_queue_mutex);
+}
+
+// Called per frame
+void add_projectile_target_line_point(struct vec3_t point)
+{
+    pthread_mutex_lock(&render_queue_mutex);
+
+    for (int i = 0; i < 1024; i++)
+    {
+        if (projectile_target_line[i].x == 0.0f && projectile_target_line[i].y == 0.0f && projectile_target_line[i].z == 0.0f)
+        {
+            projectile_target_line[i] = point;
             break;
         }
     }
@@ -200,6 +224,41 @@ void draw_timer_queue()
     pthread_mutex_unlock(&render_queue_mutex);
 }
 
+void draw_projectile_target_line()
+{
+    pthread_mutex_lock(&render_queue_mutex);
+
+    draw_set_color(
+        config.aimbot.projectile_preview.entity_prediction_color.r * 255.0f,
+        config.aimbot.projectile_preview.entity_prediction_color.g * 255.0f,
+        config.aimbot.projectile_preview.entity_prediction_color.b * 255.0f,
+        config.aimbot.projectile_preview.entity_prediction_color.a * 255
+    );
+    struct vec3_t last_pos = { 0.0f, 0.0f, 0.0f };
+    for (int i = 0; i < 1024; i++)
+    {
+        if (projectile_target_line[i].x == 0.0f && projectile_target_line[i].y == 0.0f && projectile_target_line[i].z == 0.0f)
+        {
+            break;
+        }
+
+        struct vec3_t screen_pos;
+        if (screen_position(&projectile_target_line[i], &screen_pos) != 0)
+        {
+            continue;
+        }
+
+        if (last_pos.x != 0.0f && last_pos.y != 0.0f)
+        {
+            draw_line(last_pos.x, last_pos.y, screen_pos.x, screen_pos.y);
+        }
+
+        last_pos = screen_pos;
+    }
+
+    pthread_mutex_unlock(&render_queue_mutex);
+}
+
 // Clears queues for next frame
 void clear_render_queue()
 {
@@ -209,6 +268,11 @@ void clear_render_queue()
     {
         render_queue[i].text = NULL;
         bbox_queue[i].text = NULL;
+    }
+
+    for (int i = 0; i < 1024; i++)
+    {
+        projectile_target_line[i] = (struct vec3_t){ 0.0f, 0.0f, 0.0f };
     }
 
     pthread_mutex_unlock(&render_queue_mutex);

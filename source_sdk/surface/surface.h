@@ -14,3 +14,4 @@ void draw_set_text_pos(unsigned int x, unsigned int y);
 void draw_print_text(const wchar_t *text, int text_len);
 void set_cursor_visible(bool visible);
 void draw_circle(int x, int y, int radius, int segments);
+void draw_line(int x0, int y0, int x1, int y1);

@@ -1,5 +1,4 @@
 #include "../../config/config.h"
-#include "../../libs/quartic/quartic.h"
 #include "../../source_sdk/debug_overlay/debug_overlay.h"
 #include "../../source_sdk/engine_client/engine_client.h"
 #include "../../source_sdk/engine_trace/engine_trace.h"
@@ -18,44 +17,6 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-// Linearly predicts the entity's position in the future and returns the time it will take for the rocket to reach that position
-float get_rocket_predicted_time(struct vec3_t ent_velocity, struct vec3_t ent_distance, bool ent_in_air, int rocket_speed_per_second)
-{
-    const int gravity = 800;
-
-    // Not on the ground (affected by gravity)
-    if (ent_in_air)
-    {
-        float e = (ent_distance.z * ent_distance.z) + (ent_distance.y * ent_distance.y) + (ent_distance.x * ent_distance.x);
-        float d = (2 * ent_distance.x * ent_velocity.x) + (2 * ent_distance.y * ent_velocity.y) + (2 * ent_distance.z * ent_velocity.z);
-        float c = (ent_velocity.z * ent_velocity.z) - (ent_distance.z * gravity) + (ent_distance.y * ent_distance.y) + (ent_velocity.x * ent_velocity.x) - (rocket_speed_per_second * rocket_speed_per_second);
-        float b = (-1 * ent_velocity.z * gravity);
-        float a = 0.25 * (gravity * gravity);
-
-        double poly[5] = { e, d, c, b, a };
-        double solutions[4];
-        int num_sols = solve_real_poly(4, poly, solutions);
-        double best_solution = __DBL_MAX__;
-        for (int i = 0; i < num_sols; i++)
-        {
-            if (solutions[i] > 0.0 && solutions[i] < best_solution)
-            {
-                best_solution = solutions[i];
-            }
-        }
-
-        return best_solution == __DBL_MAX__ ? -1.0f : best_solution;
-    }
-    else
-    {
-        int a = (rocket_speed_per_second * rocket_speed_per_second) - (ent_velocity.x * ent_velocity.x) - (ent_velocity.y * ent_velocity.y) - (ent_velocity.z * ent_velocity.z);
-        int b = -2 * ( (ent_distance.x * ent_velocity.x) + (ent_distance.y * ent_velocity.y) + (ent_distance.z * ent_velocity.z) );
-        int c = -1 * ( (ent_distance.x * ent_distance.x) + (ent_distance.y * ent_distance.y) + (ent_distance.z * ent_distance.z) );
-        return positive_quadratic_root((float)a, (float)b, (float)c);
-
-    }
-}
 
 int project_speed_per_second(int weapon_id)
 {
@@ -89,43 +50,45 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
         }
 
         float predicted_time = -1.0f;
-        struct vec3_t aim_pos;
+        struct vec3_t aim_pos = { 0.0f, 0.0f, 0.0f };
         if (ent_index <= max_clients && get_ent_lifestate(entity) == 1)
         {
-            struct vec3_t ent_velocity;
-            struct vec3_t ent_pos = get_ent_origin(entity);
-            bool ent_in_air = (get_ent_flags(entity) & 1) == 0;
-
-            if (ent_in_air)
+            for (float t = 0.0f; t < config.aimbot.projectile_max_time; t += config.aimbot.projectile_time_step)
             {
-                ent_pos = get_bone_pos(entity, 1);
+                struct vec3_t ent_pos = get_ent_origin(entity);
+                struct vec3_t ent_velocity;
+                bool ent_in_air = (get_ent_flags(entity) & 1) == 0;
+
+                estimate_abs_velocity(entity, &ent_velocity);
+
+                if (ent_in_air)
+                {
+                    ent_pos.x += ent_velocity.x * t;
+                    ent_pos.y += ent_velocity.y * t;
+                    ent_pos.z += ent_velocity.z * t - (0.5f * 800 * (t * t));
+                }
+                else
+                {
+                    ent_pos.x += ent_velocity.x * t;
+                    ent_pos.y += ent_velocity.y * t;
+                    ent_pos.z += ent_velocity.z * t;
+                }
+
+                int rocket_speed = project_speed_per_second(weapon_id);
+                float distance = get_distance(ent_pos, *shoot_pos);
+                float time = distance / rocket_speed;
+                float time_rounded = roundf(time / config.aimbot.projectile_time_step) * config.aimbot.projectile_time_step;
+
+                if (time_rounded > t + config.aimbot.projectile_tolerance_time || 
+                    time_rounded < t - config.aimbot.projectile_tolerance_time || 
+                    !is_pos_visible(localplayer, shoot_pos, ent_pos))
+                {
+                    continue;
+                }
+
+                aim_pos = ent_pos;
+                predicted_time = t;
             }
-            
-            estimate_abs_velocity(entity, &ent_velocity);
-            predicted_time = get_rocket_predicted_time(ent_velocity, get_difference(*shoot_pos, ent_pos), ent_in_air, project_speed_per_second(weapon_id));
-
-            if (predicted_time == -1.0f)
-            {
-                continue;
-            }
-
-            struct vec3_t rocket_predicted_pos = {
-                ent_pos.x + (ent_velocity.x * predicted_time),
-                ent_pos.y + (ent_velocity.y * predicted_time),
-                ent_pos.z + (ent_velocity.z * predicted_time)
-            };
-
-            if (ent_in_air)
-            {
-                rocket_predicted_pos.z = ent_pos.z + (ent_velocity.z * predicted_time) - (0.5f * 800 * (predicted_time * predicted_time));
-            }
-
-            if (!is_pos_visible(localplayer, shoot_pos, rocket_predicted_pos))
-            {
-                continue;
-            }
-
-            aim_pos = rocket_predicted_pos;
         }
         else
         {
@@ -141,6 +104,11 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
 
             aim_pos = get_ent_origin(entity);
             aim_pos.z += 5.0f;
+        }
+
+        if (aim_pos.x == 0.0f && aim_pos.y == 0.0f && aim_pos.z == 0.0f)
+        {
+            continue;
         }
 
         struct vec3_t new_view_angle = get_view_angle(get_difference(aim_pos, *shoot_pos));
@@ -177,7 +145,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     float original_side_move = user_cmd->sidemove;
     float original_forward_move = user_cmd->forwardmove;
 
-    float result_time;
+    float result_time = -1.0f;
     struct vec3_t result_pos;
     struct vec3_t target_view_angle;
     struct vec3_t shoot_pos;
@@ -251,6 +219,33 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
     add_bbox_decorator(L"TARGET", (struct vec3_t){207, 115, 54}, target_ent);
 
+    if (config.aimbot.projectile_preview.draw_entity_prediction)
+    {
+        for (float t = 0.0f; t < config.aimbot.projectile_max_time; t += config.aimbot.projectile_time_step)
+        {
+            struct vec3_t ent_pos = get_ent_origin(target_ent);
+            struct vec3_t ent_velocity;
+            bool ent_in_air = (get_ent_flags(target_ent) & 1) == 0;
+
+            estimate_abs_velocity(target_ent, &ent_velocity);
+
+            if (ent_in_air)
+            {
+                ent_pos.x += ent_velocity.x * t;
+                ent_pos.y += ent_velocity.y * t;
+                ent_pos.z += ent_velocity.z * t - (0.5f * 800 * (t * t));
+            }
+            else
+            {
+                ent_pos.x += ent_velocity.x * t;
+                ent_pos.y += ent_velocity.y * t;
+                ent_pos.z += ent_velocity.z * t;
+            }
+
+            add_projectile_target_line_point(ent_pos);
+        }
+    }
+
     if (config.aimbot.projectile_preview.draw_box)
     {
         float box_alpha = config.aimbot.projectile_preview.box_color.a * 255;
@@ -284,7 +279,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     {
         user_cmd->viewangles = target_view_angle;
 
-        if (config.aimbot.projectile_preview.draw_timer)
+        if (config.aimbot.projectile_preview.draw_timer && result_time != -1.0f)
         {
             struct vec3_t timer_color = {
                 config.aimbot.projectile_preview.timer_color.r * 255,
@@ -294,7 +289,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             add_timer((struct vec3_t){ result_pos.x, result_pos.y, result_pos.z + 10}, timer_color, get_global_vars_curtime(), get_global_vars_curtime() + result_time);
         }
 
-        if (config.aimbot.projectile_preview.previous_shot_line)
+        if (config.aimbot.projectile_preview.previous_shot_line && result_time != -1.0f)
         {
             struct vec3_t previous_shot_line_color = {
                 config.aimbot.projectile_preview.previous_shot_line_color.r * 255,
@@ -304,7 +299,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             add_line_overlay(&shoot_pos, &result_pos, previous_shot_line_color.x, previous_shot_line_color.y, previous_shot_line_color.z, true, result_time + config.aimbot.projectile_preview.previous_shot_linger_time);
         }
 
-        if (config.aimbot.projectile_preview.previous_shot_box)
+        if (config.aimbot.projectile_preview.previous_shot_box && result_time != -1.0f)
         {
             float box_alpha = config.aimbot.projectile_preview.previous_shot_box_color.a * 255;
             struct vec3_t box_color = {

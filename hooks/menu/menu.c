@@ -160,7 +160,11 @@ void draw_aim_tab(struct nk_context *ctx)
         {
             NK_COLOR_PICKER_ROW(ctx, "Timer color:", &config.aimbot.projectile_preview.timer_color);
         }
-
+        NK_CHECKBOX_ROW(ctx, "Draw entity prediction", &config.aimbot.projectile_preview.draw_entity_prediction);
+        if (config.aimbot.projectile_preview.draw_entity_prediction)
+        {
+            NK_COLOR_PICKER_ROW(ctx, "Entity prediction color:", &config.aimbot.projectile_preview.entity_prediction_color);
+        }
         if (config.aimbot.projectile_preview.previous_shot_box || config.aimbot.projectile_preview.previous_shot_line)
         {
             char previous_shot_linger_time_text[32];
