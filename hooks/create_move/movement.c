@@ -3,7 +3,6 @@
 #include "../../source_sdk/entity/entity.h"
 #include "../../source_sdk/math/vec3.h"
 #include "../../source_sdk/user_cmd.h"
-#include "../paint_traverse/paint_traverse.h"
 #include "create_move.h"
 
 void bhop(void *localplayer, struct user_cmd *user_cmd){
@@ -36,7 +35,11 @@ void autostrafe(void *localplayer, struct user_cmd *user_cmd){
     // TBD: figure out how to implement directional / rage autostrafe
     // i don't think this kind of autostrafe does anything
 
-    float cl_sidespeed = 450.0f; //assing default values 
+    if(get_player_class(localplayer) == TF_CLASS_SCOUT){
+        return;
+    }
+
+    float cl_sidespeed = 450.0f; //assume default values 
 
     bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
 

@@ -69,10 +69,10 @@ struct player_info_t
 	unsigned char files_downloaded;
 };
 
-// usefull for using with get_ent_flags()
-// EX:  bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
 
-enum entity_flags {
+// EX:  bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
+enum entity_flags 
+{
     FL_ONGROUND = (1 << 0),
     FL_DUCKING = (1 << 1),
     FL_WATERJUMP = (1 << 2),

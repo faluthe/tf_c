@@ -20,8 +20,6 @@ struct user_cmd
     short mouse_dy;
 };
 
-// not sure if this is the best place, but since user_cmd->buttons comes from here
-// i think it comes in handy being together
 enum in_buttons 
 {
     IN_ATTACK = (1 << 0),
