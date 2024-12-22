@@ -23,6 +23,9 @@ bool init_config()
         config.aimbot.draw_fov = 1;
         config.aimbot.fov = 10.0f;
         config.aimbot.fov_color = (struct nk_colorf){ 207.0f / 255.0f, 115.0f / 255.0f, 54.0f / 255.0f, 0.25f };
+        config.aimbot.projectile_time_step = 0.01f;
+        config.aimbot.projectile_max_time = 1.0f;
+        config.aimbot.projectile_tolerance_time = 0.05f;
         config.aimbot.key.use_key = 1;
         config.aimbot.key.binding = (struct key_binding){ INPUT_MOUSE, SDL_BUTTON_X2, false };
         config.aimbot.key.is_pressed = false;
@@ -38,6 +41,8 @@ bool init_config()
         config.aimbot.projectile_preview.draw_timer = 1;
         config.aimbot.projectile_preview.timer_color = (struct nk_colorf){ 1.0f, 0.0f, 0.0f, 1.0f };
         config.aimbot.projectile_preview.previous_shot_linger_time = 0.5f;
+        config.aimbot.projectile_preview.draw_entity_prediction = 1;
+        config.aimbot.projectile_preview.entity_prediction_color = (struct nk_colorf){ 1.0f, 1.0f, 1.0f, 1.0f };
         config.esp.player_health_bar = 1;
         config.esp.player_bounding_box = 1;
         config.esp.player_name = 1;

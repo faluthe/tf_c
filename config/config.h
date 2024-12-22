@@ -37,6 +37,9 @@ struct config
         int draw_fov;
         float fov;
         struct nk_colorf fov_color;
+        float projectile_time_step;
+        float projectile_max_time;
+        float projectile_tolerance_time;
         struct
         {
             int use_key;
@@ -57,6 +60,8 @@ struct config
             int draw_timer;
             struct nk_colorf timer_color;
             float previous_shot_linger_time;
+            int draw_entity_prediction;
+            struct nk_colorf entity_prediction_color;
         } projectile_preview;
     } aimbot;
     struct
