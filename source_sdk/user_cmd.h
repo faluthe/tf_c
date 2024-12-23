@@ -18,6 +18,7 @@ struct user_cmd
     int random_seed;
     short mouse_dx;
     short mouse_dy;
+    bool has_been_predicted;
 };
 
 enum in_buttons 
@@ -50,4 +51,4 @@ enum in_buttons
     IN_ATTACK3 = (1 << 25),
 };
 
-#endif // USER_CMD_H
+#endif

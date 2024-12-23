@@ -12,5 +12,5 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
 
 
 /* MOVEMENT */
-void bhop(void *localplayer, struct user_cmd *user_cmd);
+void bunny_hop(void *localplayer, struct user_cmd *user_cmd);
 void autostrafe(void *localplayer, struct user_cmd *user_cmd);
