@@ -17,6 +17,7 @@ bool init_config()
         config.aimbot.key.is_pressed = false;
 
         config.misc.bunny_hop = 1;
+        config.misc.autostrafe = 1;
         config.misc.do_thirdperson = false;
         config.aimbot.aimbot_enabled = 1;
         config.aimbot.draw_fov = 1;

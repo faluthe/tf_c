@@ -18,3 +18,4 @@ I recommend installing the `libglew-dev` package and then installing `libglew2.1
 ### Contributors
 - faluthe
 - [yoshisaac](https://github.com/yoshisaac)
+- [LeaoMartelo2](https://github.com/LeaoMartelo2)

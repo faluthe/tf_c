@@ -236,6 +236,7 @@ void draw_misc_tab(struct nk_context *ctx)
     NK_HEADER_ROW(ctx, "General", NK_TEXT_LEFT);
     {
         NK_CHECKBOX_ROW(ctx, "Bunny hop", &config.misc.bunny_hop);
+        NK_CHECKBOX_ROW(ctx, "Auto strafe", &config.misc.autostrafe);
         // TBD: Add thirdperson key stuff + bool
         nk_layout_row_dynamic(ctx, 20, 1);
         if (nk_button_label(ctx, "Save config"))

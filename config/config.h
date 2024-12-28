@@ -28,6 +28,7 @@ struct config
     struct
     {
         int bunny_hop;
+        int autostrafe;
         bool do_thirdperson;
     } misc;
     struct
