@@ -4,7 +4,6 @@
 #include "interfaces/interfaces.h"
 #include "source_sdk/estimate_abs_velocity/estimate_abs_velocity.h"
 #include "source_sdk/engine_client/engine_client.h"
-// #include "source_sdk/entity/entity.h"
 #include "utils/utils.h"
 
 #include <stdio.h>
@@ -19,6 +18,8 @@ __attribute__((destructor)) void unload()
 
 __attribute__((constructor)) void init()
 {
+    log_msg("Initializing tf_c\n");
+
     if (!init_config())
     {
         log_msg("Failed to initialize config\n");

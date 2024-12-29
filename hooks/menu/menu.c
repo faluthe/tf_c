@@ -54,6 +54,31 @@
         multi_select_combo_box((ctx), id_token##_options, id_token##_selections, options_count, id_token##_preview_text);   \
     } while(0)                                                                                                              \
 
+// TBD: Make this easily handleable in PollEvent hook
+#define NK_KEY_EDIT_ROW(ctx, label, key_binding)                            \
+    do {                                                                    \
+        char key_edit_buffer[64];                                           \
+        nk_layout_row_dynamic((ctx), ROW_SIZE, 2);                          \
+        nk_label((ctx), (label), NK_TEXT_LEFT);                             \
+        if ((key_binding).editing) {                                        \
+            sprintf(key_edit_buffer, "Press a key/mouse button");           \
+        }                                                                   \
+        else {                                                              \
+            if ((key_binding).type == INPUT_KEY) {                          \
+                sprintf(key_edit_buffer, "Key: %d", (key_binding).code);    \
+            }                                                               \
+            else if ((key_binding).type == INPUT_MOUSE) {                   \
+                sprintf(key_edit_buffer, "Mouse: %d", (key_binding).code);  \
+            }                                                               \
+            else {                                                          \
+                sprintf(key_edit_buffer, "None");                           \
+            }                                                               \
+        }                                                                   \
+        if (nk_button_label((ctx), key_edit_buffer)) {                      \
+            (key_binding).editing = 1;                                      \
+        }                                                                   \
+    } while (0)                                                             \
+
 void watermark(struct nk_context *ctx)
 {
     if (nk_begin(ctx, "watermark", nk_rect(10, 10, 150, 30), NK_WINDOW_BORDER | NK_WINDOW_NO_INPUT | NK_WINDOW_NO_SCROLLBAR))
@@ -61,58 +86,6 @@ void watermark(struct nk_context *ctx)
         NK_TEXT_ROW(ctx, "TF_C by faluthe", NK_TEXT_CENTERED);
     }
     nk_end(ctx);
-}
-
-void multi_select_combo_box(struct nk_context *ctx, const char **options, int **selections, int options_count, char *preview_text)
-{
-    const int preview_text_size = 128;
-
-    preview_text[0] = '\0';
-    for (int k = 0; k < options_count; k++)
-    {
-        if (*selections[k])
-        {
-            if (strlen(preview_text) > 0)
-            {
-                strncat(preview_text, ", ", preview_text_size - strlen(preview_text) - 1);
-            }
-            strncat(preview_text, options[k], preview_text_size - strlen(preview_text) - 1);
-        }
-    }
-    if (strlen(preview_text) == 0)
-    {
-        strncpy(preview_text, "None", preview_text_size - 1);
-        preview_text[preview_text_size - 1] = '\0';
-    }
-
-    if (nk_combo_begin_label(ctx, preview_text, nk_vec2(nk_widget_width(ctx), 300)))
-    {
-        nk_layout_row_dynamic(ctx, 20, 1);
-        for (int i = 0; i < options_count; i++)
-        {
-            if (nk_checkbox_label(ctx, options[i], selections[i]))
-            {
-                preview_text[0] = '\0';
-                for (int k = 0; k < options_count; k++)
-                {
-                    if (*selections[k])
-                    {
-                        if (strlen(preview_text) > 0)
-                        {
-                            strncat(preview_text, ", ", preview_text_size - strlen(preview_text) - 1);
-                        }
-                        strncat(preview_text, options[k], preview_text_size - strlen(preview_text) - 1);
-                    }
-                }
-                if (strlen(preview_text) == 0)
-                {
-                    strncpy(preview_text, "None", preview_text_size - 1);
-                    preview_text[preview_text_size - 1] = '\0';
-                }
-            }
-        }
-        nk_combo_end(ctx);
-    }
 }
 
 void draw_aim_tab(struct nk_context *ctx)
@@ -137,6 +110,18 @@ void draw_aim_tab(struct nk_context *ctx)
     {
         static const char *proj_preview_options[] = { "Trace line", "3D Box", "Only draw on target" };
         static const char *previous_shot_options[] = { "Trace line", "3D Box", "Timer" };
+
+        char projectile_time_step_text[32];
+        sprintf(projectile_time_step_text, "Projectile time step: %.2f", config.aimbot.projectile_time_step);
+        NK_FLOAT_SLIDER_ROW(ctx, projectile_time_step_text, &config.aimbot.projectile_time_step, 0.01f, 0.1f, 0.01f);
+
+        char projectile_max_time_text[32];
+        sprintf(projectile_max_time_text, "Projectile max time: %.1f", config.aimbot.projectile_max_time);
+        NK_FLOAT_SLIDER_ROW(ctx, projectile_max_time_text, &config.aimbot.projectile_max_time, 0.1f, 10.0f, 0.5f);
+
+        char projectile_tolerance_time_text[32];
+        sprintf(projectile_tolerance_time_text, "Projectile tolerance time: %.2f", config.aimbot.projectile_tolerance_time);
+        NK_FLOAT_SLIDER_ROW(ctx, projectile_tolerance_time_text, &config.aimbot.projectile_tolerance_time, 0.01f, 0.5f, 0.01f);
 
         NK_COMBO_BOX_ROW(ctx, projectile_preview, "Projectile preview:", proj_preview_options, 3, &config.aimbot.projectile_preview.draw_line, &config.aimbot.projectile_preview.draw_box, &config.aimbot.projectile_preview.only_draw_if_target);
         if (config.aimbot.projectile_preview.draw_line)
@@ -172,35 +157,8 @@ void draw_aim_tab(struct nk_context *ctx)
             NK_FLOAT_SLIDER_ROW(ctx, previous_shot_linger_time_text, &config.aimbot.projectile_preview.previous_shot_linger_time, 0.0f, 2.0f, 0.05f);
         }
     }
-
-    // TBD: Macro this
-    nk_layout_row_dynamic(ctx, 20, 2);
-    nk_label(ctx, "Aimbot key: ", NK_TEXT_LEFT);
-    char key_edit_buffer[64];
-    if (config.aimbot.key.binding.editing)
-    {
-        snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Press a key/mouse button");
-    }
-    else
-    {
-        if (config.aimbot.key.binding.type == INPUT_KEY)
-        {
-            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Key: %d", config.aimbot.key.binding.code);
-        }
-        else if (config.aimbot.key.binding.type == INPUT_MOUSE)
-        {
-            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "Mouse: %d", config.aimbot.key.binding.code);
-        }
-        else
-        {
-            snprintf(key_edit_buffer, sizeof(key_edit_buffer), "None");
-        }
-    }
-
-    if (nk_button_label(ctx, key_edit_buffer))
-    {
-        config.aimbot.key.binding.editing = 1;
-    }
+    
+    NK_KEY_EDIT_ROW(ctx, "Aimbot key: ", config.aimbot.key.binding);
 }
 
 void draw_esp_tab(struct nk_context *ctx)
