@@ -18,17 +18,65 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-int project_speed_per_second(int weapon_id)
+// TBD: Read `sv_gravity` from the server
+static const int gravity = 800;
+
+struct projectile_info
+{
+    int speed_per_second;
+    // Proporational to server gravity
+    float gravity;
+};
+
+struct projectile_info project_speed_per_second(int weapon_id)
 {
     switch (weapon_id)
     {
         case TF_WEAPON_ROCKETLAUNCHER:
-            return 1100;
+            return (struct projectile_info){ 1100, 0.0f };
         case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
-            return 1980;
+            return (struct projectile_info){ 1980, 0.0f };
+        case TF_WEAPON_GRENADELAUNCHER:
+            return (struct projectile_info){ 1216, 0.5f };
         default:
-            return 0;
+            return (struct projectile_info){ 0, 0.0f };
     }
+}
+
+// Returns angle in radians
+float get_optimal_launch_angle(struct vec3_t *launch_pos, struct vec3_t *final_pos, struct projectile_info *proj_info)
+{
+    float x_delta = final_pos->x - launch_pos->x;
+    float y_delta = final_pos->y - launch_pos->y;
+    float z_delta = final_pos->z - launch_pos->z;
+
+    // Horizontal distance
+    float R = sqrtf((x_delta * x_delta) + (y_delta * y_delta));
+
+    float g = proj_info->gravity * gravity;
+    float v = proj_info->speed_per_second;
+
+    float root = (v * v * v * v) - g * (g * R * R + 2.0f * z_delta * v * v);
+
+    if (root < 0)
+    {
+        return -1.0f;
+    }
+
+    float angle = atanf((v * v - sqrtf(root)) / (g * R));
+
+    return angle;
+}
+
+// Takes angle in radians
+float get_travel_time(struct vec3_t *launch_pos, struct vec3_t *final_pos, int v, float angle)
+{
+    float x_delta = final_pos->x - launch_pos->x;
+    float y_delta = final_pos->y - launch_pos->y;
+
+    float R = sqrtf(x_delta * x_delta + y_delta * y_delta);
+
+    return R / (v * cosf(angle));
 }
 
 void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struct vec3_t view_angle, int weapon_id, struct vec3_t *result_angle, struct vec3_t *result_pos, float *result_time)
@@ -51,6 +99,7 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
 
         float predicted_time = -1.0f;
         struct vec3_t aim_pos = { 0.0f, 0.0f, 0.0f };
+        float optimal_pitch = 0.0f;
         if (ent_index <= max_clients && get_ent_lifestate(entity) == 1)
         {
             for (float t = 0.0f; t < config.aimbot.projectile_max_time; t += config.aimbot.projectile_time_step)
@@ -65,7 +114,7 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
                 {
                     ent_pos.x += ent_velocity.x * t;
                     ent_pos.y += ent_velocity.y * t;
-                    ent_pos.z += ent_velocity.z * t - (0.5f * 800 * (t * t));
+                    ent_pos.z += ent_velocity.z * t - (0.5f * gravity * (t * t));
                 }
                 else
                 {
@@ -74,20 +123,47 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
                     ent_pos.z += ent_velocity.z * t;
                 }
 
-                int rocket_speed = project_speed_per_second(weapon_id);
-                float distance = get_distance(ent_pos, *shoot_pos);
-                float time = distance / rocket_speed;
-                float time_rounded = roundf(time / config.aimbot.projectile_time_step) * config.aimbot.projectile_time_step;
+                struct projectile_info proj_info = project_speed_per_second(weapon_id);
 
-                if (time_rounded > t + config.aimbot.projectile_tolerance_time || 
-                    time_rounded < t - config.aimbot.projectile_tolerance_time || 
-                    !is_pos_visible(localplayer, shoot_pos, ent_pos))
+                if (proj_info.speed_per_second == 0)
                 {
-                    continue;
+                    return NULL;
                 }
 
-                aim_pos = ent_pos;
-                predicted_time = t;
+                // Soldier's rocket is not affected by gravity
+                if (proj_info.gravity == 0.0f)
+                {
+                    float distance = get_distance(ent_pos, *shoot_pos);
+                    float time = distance / proj_info.speed_per_second;
+                    float time_rounded = roundf(time / config.aimbot.projectile_time_step) * config.aimbot.projectile_time_step;
+
+                    if (time_rounded > t + config.aimbot.projectile_tolerance_time || 
+                        time_rounded < t - config.aimbot.projectile_tolerance_time || 
+                        !is_pos_visible(localplayer, shoot_pos, ent_pos))
+                    {
+                        continue;
+                    }
+
+                    aim_pos = ent_pos;
+                    predicted_time = t;
+                }
+                else
+                {
+                    float optimal_angle = get_optimal_launch_angle(shoot_pos, &ent_pos, &proj_info);
+                    if (optimal_angle == -1.0f)
+                    {
+                        continue;
+                    }
+                    float travel_time = get_travel_time(shoot_pos, &ent_pos, proj_info.speed_per_second, optimal_angle);
+
+                    // TBD: Check if arc is uninterrupted
+                    if (travel_time != -1.0f && travel_time < t)
+                    {
+                        aim_pos = ent_pos;
+                        predicted_time = t;
+                        optimal_pitch = optimal_angle * (180.0f / M_PI);
+                    }
+                }
             }
         }
         else
@@ -112,6 +188,10 @@ void *get_closet_fov_ent_proj(void *localplayer, struct vec3_t *shoot_pos, struc
         }
 
         struct vec3_t new_view_angle = get_view_angle(get_difference(aim_pos, *shoot_pos));
+        if (optimal_pitch != 0.0f)
+        {
+            new_view_angle.x = -optimal_pitch;
+        }
         float fov_distance = get_fov(view_angle, new_view_angle);
 
         if (fov_distance <= config.aimbot.fov && fov_distance < smallest_fov_angle)
@@ -151,8 +231,9 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
     struct vec3_t shoot_pos;
     struct vec3_t local_pos = get_ent_eye_pos(localplayer);
     
-    get_projectile_fire_setup(localplayer, user_cmd->viewangles, (struct vec3_t){ 23.5f, 12.0f, -3.0f }, &shoot_pos);
-    void *target_ent = get_closet_fov_ent_proj(localplayer, &local_pos, user_cmd->viewangles, weapon_id, &target_view_angle, &result_pos, &result_time);
+    // get_projectile_fire_setup(localplayer, user_cmd->viewangles, (struct vec3_t){ 23.5f, 12.0f, -3.0f }, &shoot_pos);
+    get_projectile_fire_setup(localplayer, user_cmd->viewangles, (struct vec3_t){ 16.0f, 8.0f, -6.0f }, &shoot_pos);
+    void *target_ent = get_closet_fov_ent_proj(localplayer, &shoot_pos, user_cmd->viewangles, weapon_id, &target_view_angle, &result_pos, &result_time);
 
     // TBD: This is a really bad method of drawing this
     struct vec3_t mins = { -3, -3, -3 };
@@ -233,7 +314,7 @@ void projectile_aimbot(void *localplayer, struct user_cmd *user_cmd, int weapon_
             {
                 ent_pos.x += ent_velocity.x * t;
                 ent_pos.y += ent_velocity.y * t;
-                ent_pos.z += ent_velocity.z * t - (0.5f * 800 * (t * t));
+                ent_pos.z += ent_velocity.z * t - (0.5f * gravity * (t * t));
             }
             else
             {
