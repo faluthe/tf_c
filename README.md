@@ -11,6 +11,7 @@ Work in Progress TF2 GNU Linux Dynamic Library.
 
 (Arch)
 - `base-devel`
+- `gdb`
 - `sdl2`
 - `glew` and [`glew-2.1`](https://aur.archlinux.org/packages/glew-2.1)
 - [`ProggyFonts`](https://aur.archlinux.org/packages/proggyfonts)
