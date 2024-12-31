@@ -44,15 +44,17 @@ void autostrafe(void *localplayer, struct user_cmd *user_cmd)
     // TBD: figure out how to implement directional / rage autostrafe
     // i don't think this kind of autostrafe does anything
 
-    if (!config.misc.autostrafe || get_player_class(localplayer) == TF_CLASS_SCOUT)
+    if (!config.misc.legit_autostrafe || get_player_class(localplayer) == TF_CLASS_SCOUT)
     {
         return;
     }
 
     const float cl_sidespeed = 450.0f; // assume default value
-    const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
 
-    if (on_ground)
+    const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
+    const bool on_water = get_ent_flags(localplayer) & FL_INWATER;
+
+    if (on_ground || on_water)
     {
         return;
     }
@@ -69,9 +71,18 @@ void autostrafe(void *localplayer, struct user_cmd *user_cmd)
 
 void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
 {
-    const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
+    // inspired from:
+    // https://github.com/degeneratehyperbola/NEPS
 
-    if (on_ground)
+    if (!config.misc.rage_autostrafe)
+    {
+        return;
+    }
+
+    const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
+    const bool on_water = get_ent_flags(localplayer) & FL_INWATER;
+
+    if (on_ground || on_water)
     {
         return;
     }
@@ -79,7 +90,7 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
     const struct vec3_t velocity = get_ent_velocity(localplayer);
     const float speed = vec_lenght2d(velocity);
 
-    if (speed < 30)
+    if (speed < 2)
     {
         return;
     }
@@ -90,7 +101,10 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
     const float cl_forwardspeed = 450.0f;
     const float cl_sidespeed = 450.0f;
 
-    float terminal = sv_airaccelerate / sv_maxspeed * 100.0f / speed;
+    // this is hardcoded in tf2, unless a sourcemod that changes movement touched it
+    const float wishspeed = 30.0f;
+
+    float terminal = wishspeed / sv_airaccelerate / sv_maxspeed * 100.0f / speed;
 
     if (terminal < -1 || terminal > 1)
     {

@@ -9,7 +9,6 @@
 
 #include "create_move.h"
 
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -57,6 +56,7 @@ __int64_t create_move_hook(void *this, float sample_time, struct user_cmd *user_
         clear_render_queue();
         aimbot(localplayer, user_cmd);
         bunny_hop(localplayer, user_cmd);
+        autostrafe(localplayer, user_cmd);
         rage_autostrafe(localplayer, user_cmd);
     }
 
