@@ -10,3 +10,6 @@ tf_c.so
 
 # Config files
 *.tf_c.bin
+
+# clang-format
+.clang-format

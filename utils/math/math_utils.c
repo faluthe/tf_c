@@ -13,7 +13,7 @@ struct vec3_t get_difference(struct vec3_t pos1, struct vec3_t pos2)
 
 float get_distance(struct vec3_t pos1, struct vec3_t pos2)
 {
-  return sqrt(((pos1.x - pos2.x)*(pos1.x - pos2.x)) + ((pos1.y - pos2.y)*(pos1.y - pos2.y)) + ((pos1.z - pos2.z)*(pos1.z - pos2.z)));
+    return sqrt(((pos1.x - pos2.x) * (pos1.x - pos2.x)) + ((pos1.y - pos2.y) * (pos1.y - pos2.y)) + ((pos1.z - pos2.z) * (pos1.z - pos2.z)));
 }
 
 float positive_quadratic_root(float a, float b, float c)
@@ -100,11 +100,34 @@ struct vec3_t get_view_angle(struct vec3_t diff)
     float pitch_angle = atan2(diff.z, c) * 180 / M_PI;
     float yaw_angle = atan2(diff.y, diff.x) * 180 / M_PI;
 
-    struct vec3_t view_angle = {
-        .x = -pitch_angle,
-        .y = yaw_angle,
-        .z = 0
-    };
+    struct vec3_t view_angle = {.x = -pitch_angle, .y = yaw_angle, .z = 0};
 
     return view_angle;
+}
+
+float vec_lenght2d(struct vec3_t vec)
+{
+    return sqrtf(vec.x * vec.x + vec.y * vec.y);
+}
+
+float deg_2_rad(float n)
+{
+    return n * M_PI / 180.0f;
+}
+
+float delta_rad_angle2f(float a, float b)
+{
+
+    float delta = isfinite(a - b) ? remainder(a - b, 360) : 0;
+
+    if (a > b && delta >= M_PI)
+    {
+        delta -= M_PI * 2;
+    }
+    else if (delta <= -M_PI)
+    {
+        delta += M_PI * 2;
+    }
+
+    return delta;
 }
