@@ -14,7 +14,7 @@ void bunny_hop(void *localplayer, struct user_cmd *user_cmd)
      * i haven't figured out why (FROM TESTING: i belive the on ground flag sometimes is not getting set correctly)
      * in any case, i'll just disable bhop on scout until i figure it out */
 
-    if (!config.misc.bunny_hop || get_player_class(localplayer) == TF_CLASS_SCOUT)
+    if ( !config.misc.bunny_hop || get_player_class(localplayer) == TF_CLASS_SCOUT )
     {
         return;
     }
@@ -22,18 +22,18 @@ void bunny_hop(void *localplayer, struct user_cmd *user_cmd)
     static bool was_jumping = false;
     bool on_ground = (get_ent_flags(localplayer) & FL_ONGROUND);
 
-    if (user_cmd->buttons & IN_JUMP)
+    if ( user_cmd->buttons & IN_JUMP )
     {
-        if (!was_jumping && !on_ground)
+        if ( !was_jumping && !on_ground )
         {
             user_cmd->buttons &= ~IN_JUMP;
         }
-        else if (was_jumping)
+        else if ( was_jumping )
         {
             was_jumping = false;
         }
     }
-    else if (!was_jumping)
+    else if ( !was_jumping )
     {
         was_jumping = true;
     }
@@ -44,7 +44,7 @@ void autostrafe(void *localplayer, struct user_cmd *user_cmd)
     // TBD: figure out how to implement directional / rage autostrafe
     // i don't think this kind of autostrafe does anything
 
-    if (!config.misc.legit_autostrafe || get_player_class(localplayer) == TF_CLASS_SCOUT)
+    if ( !config.misc.legit_autostrafe || get_player_class(localplayer) == TF_CLASS_SCOUT )
     {
         return;
     }
@@ -54,16 +54,16 @@ void autostrafe(void *localplayer, struct user_cmd *user_cmd)
     const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
     const bool on_water = get_ent_flags(localplayer) & FL_INWATER;
 
-    if (on_ground || on_water)
+    if ( on_ground || on_water )
     {
         return;
     }
 
-    if (user_cmd->mouse_dx < 0)
+    if ( user_cmd->mouse_dx < 0 )
     {
         user_cmd->sidemove = -cl_sidespeed;
     }
-    else if (user_cmd->mouse_dx > 0)
+    else if ( user_cmd->mouse_dx > 0 )
     {
         user_cmd->sidemove = cl_sidespeed;
     }
@@ -74,7 +74,7 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
     // inspired from:
     // https://github.com/degeneratehyperbola/NEPS
 
-    if (!config.misc.rage_autostrafe)
+    if ( !config.misc.rage_autostrafe || get_player_class(localplayer) == TF_CLASS_SCOUT )
     {
         return;
     }
@@ -82,7 +82,7 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
     const bool on_ground = get_ent_flags(localplayer) & FL_ONGROUND;
     const bool on_water = get_ent_flags(localplayer) & FL_INWATER;
 
-    if (on_ground || on_water)
+    if ( on_ground || on_water )
     {
         return;
     }
@@ -90,7 +90,7 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
     const struct vec3_t velocity = get_ent_velocity(localplayer);
     const float speed = vec_lenght2d(velocity);
 
-    if (speed < 2)
+    if ( speed < 2 )
     {
         return;
     }
@@ -106,7 +106,7 @@ void rage_autostrafe(void *localplayer, struct user_cmd *user_cmd)
 
     float terminal = wishspeed / sv_airaccelerate / sv_maxspeed * 100.0f / speed;
 
-    if (terminal < -1 || terminal > 1)
+    if ( terminal < -1 || terminal > 1 )
     {
         return;
     }
