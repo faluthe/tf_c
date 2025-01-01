@@ -12,7 +12,7 @@ bool init_config()
 {
     FILE *config_file = fopen(config_path, "rb");
 
-    if ( config_file == NULL || !fread(&config, sizeof(struct config), 1, config_file) )
+    if (config_file == NULL || !fread(&config, sizeof(struct config), 1, config_file))
     {
         config.aimbot.key.is_pressed = false;
 
@@ -71,12 +71,12 @@ bool save_config()
 {
     FILE *config_file = fopen(config_path, "wb");
 
-    if ( config_file == NULL )
+    if (config_file == NULL)
     {
         return false;
     }
 
-    if ( !fwrite(&config, sizeof(struct config), 1, config_file) )
+    if (!fwrite(&config, sizeof(struct config), 1, config_file))
     {
         fclose(config_file);
         return false;

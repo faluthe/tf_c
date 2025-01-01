@@ -23,7 +23,7 @@ void aimbot(void *localplayer, struct user_cmd *user_cmd)
     int weapon_id = get_weapon_id(active_weapon);
     bool is_projectile_class = get_player_class(localplayer) == TF_CLASS_SOLDIER;
     bool is_projectile_weapon = weapon_id == TF_WEAPON_ROCKETLAUNCHER || weapon_id == TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT;
-    
+
     if (is_projectile_class && is_projectile_weapon)
     {
         projectile_aimbot(localplayer, user_cmd, weapon_id);
